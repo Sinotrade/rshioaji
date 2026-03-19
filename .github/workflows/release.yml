@@ -67,6 +67,8 @@ jobs:
 
       - name: Build wheels
         working-directory: rshioaji/python
+        env:
+          CARGO_TARGET_DIR: ${{ github.workspace }}/rshioaji/target
         run: maturin build --release --out dist --find-interpreter --compatibility manylinux2014 --zig
 
       - name: Upload wheel artifacts
@@ -171,6 +173,8 @@ jobs:
           target: aarch64
           args: --release --out dist
           working-directory: rshioaji/python
+        env:
+          CARGO_TARGET_DIR: ${{ github.workspace }}/rshioaji/target
 
       - name: Upload wheel artifacts
         uses: actions/upload-artifact@v4
@@ -231,6 +235,8 @@ jobs:
           target: x86_64
           args: --release --out dist
           working-directory: rshioaji/python
+        env:
+          CARGO_TARGET_DIR: ${{ github.workspace }}/rshioaji/target
 
       - name: Upload wheel artifacts
         uses: actions/upload-artifact@v4
