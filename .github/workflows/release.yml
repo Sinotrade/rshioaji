@@ -44,20 +44,28 @@ jobs:
           repository: Yvictor/rshioaji
           ref: ${{ inputs.version }}
           ssh-key: ${{ secrets.PRIVATE_REPO_DEPLOY_KEY }}
+          path: rshioaji
+
+      - name: Checkout rsolace
+        uses: actions/checkout@v4
+        with:
+          repository: Yvictor/rsolace
+          path: rsolace
 
       - name: Build standalone binary
         if: matrix.target == 'x86_64' || runner.os != 'Linux'
+        working-directory: rshioaji
         run: cargo build --release
 
       - name: Copy binary to wheel data
         if: matrix.target == 'x86_64' || runner.os != 'Linux'
         shell: bash
         run: |
-          mkdir -p python/shioaji.data/scripts
+          mkdir -p rshioaji/python/shioaji.data/scripts
           if [ "$RUNNER_OS" = "Windows" ]; then
-            cp target/release/shioaji.exe python/shioaji.data/scripts/
+            cp rshioaji/target/release/shioaji.exe rshioaji/python/shioaji.data/scripts/
           else
-            cp target/release/shioaji python/shioaji.data/scripts/
+            cp rshioaji/target/release/shioaji rshioaji/python/shioaji.data/scripts/
           fi
 
       - name: Build wheels
@@ -66,25 +74,25 @@ jobs:
           target: ${{ matrix.target }}
           args: --release --out dist
           manylinux: auto
-          working-directory: python
+          working-directory: rshioaji/python
 
       - name: Upload wheel artifacts
         uses: actions/upload-artifact@v4
         with:
           name: wheel-${{ matrix.os }}-${{ matrix.target }}
-          path: python/dist/*.whl
+          path: rshioaji/python/dist/*.whl
 
       - name: Archive standalone binary (unix)
         if: (matrix.target == 'x86_64' || runner.os != 'Linux') && runner.os != 'Windows'
         run: |
-          cd target/release
-          tar czf ../../shioaji-${{ inputs.version }}-${{ runner.os }}-${{ matrix.target }}.tar.gz shioaji
+          cd rshioaji/target/release
+          tar czf ../../../shioaji-${{ inputs.version }}-${{ runner.os }}-${{ matrix.target }}.tar.gz shioaji
 
       - name: Archive standalone binary (windows)
         if: runner.os == 'Windows' && matrix.target == 'x86_64'
         shell: powershell
         run: |
-          Compress-Archive -Path target/release/shioaji.exe -DestinationPath shioaji-${{ inputs.version }}-Windows-x86_64.zip
+          Compress-Archive -Path rshioaji/target/release/shioaji.exe -DestinationPath shioaji-${{ inputs.version }}-Windows-x86_64.zip
 
       - name: Upload binary artifacts
         if: matrix.target == 'x86_64' || runner.os != 'Linux'
@@ -119,6 +127,13 @@ jobs:
           repository: Yvictor/rshioaji
           ref: ${{ inputs.version }}
           ssh-key: ${{ secrets.PRIVATE_REPO_DEPLOY_KEY }}
+          path: rshioaji
+
+      - name: Checkout rsolace
+        uses: actions/checkout@v4
+        with:
+          repository: Yvictor/rsolace
+          path: rsolace
 
       - name: Build wheels (free-threaded)
         uses: PyO3/maturin-action@v1
@@ -126,13 +141,13 @@ jobs:
           target: ${{ matrix.target }}
           args: --release --out dist --features testing
           manylinux: auto
-          working-directory: python
+          working-directory: rshioaji/python
 
       - name: Upload wheel artifacts
         uses: actions/upload-artifact@v4
         with:
           name: wheel-free-threaded-${{ matrix.os }}-${{ matrix.target }}
-          path: python/dist/*.whl
+          path: rshioaji/python/dist/*.whl
 
   build-binary-linux-aarch64:
     name: Build binary (Linux aarch64)
@@ -144,17 +159,25 @@ jobs:
           repository: Yvictor/rshioaji
           ref: ${{ inputs.version }}
           ssh-key: ${{ secrets.PRIVATE_REPO_DEPLOY_KEY }}
+          path: rshioaji
+
+      - name: Checkout rsolace
+        uses: actions/checkout@v4
+        with:
+          repository: Yvictor/rsolace
+          path: rsolace
 
       - name: Install cross
         run: cargo install cross
 
       - name: Build binary
+        working-directory: rshioaji
         run: cross build --release --target aarch64-unknown-linux-gnu
 
       - name: Archive binary
         run: |
-          cd target/aarch64-unknown-linux-gnu/release
-          tar czf ../../../shioaji-${{ inputs.version }}-Linux-aarch64.tar.gz shioaji
+          cd rshioaji/target/aarch64-unknown-linux-gnu/release
+          tar czf ../../../../shioaji-${{ inputs.version }}-Linux-aarch64.tar.gz shioaji
 
       - name: Upload binary artifact
         uses: actions/upload-artifact@v4
