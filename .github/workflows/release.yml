@@ -20,23 +20,134 @@ permissions:
   id-token: write
 
 jobs:
-  build-wheels:
-    name: Build wheels (${{ matrix.os }} ${{ matrix.target }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: ubuntu-latest
-            target: x86_64
-          # - os: ubuntu-latest
-          #   target: aarch64
-          # - os: macos-13
-          #   target: x86_64
-          - os: macos-latest
-            target: aarch64
-          - os: windows-latest
-            target: x86_64
+  build-wheels-linux:
+    name: Build wheels (Linux x86_64)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout private repo
+        uses: actions/checkout@v4
+        with:
+          repository: Yvictor/rshioaji
+          ref: ${{ inputs.version }}
+          ssh-key: ${{ secrets.PRIVATE_REPO_DEPLOY_KEY }}
+          path: rshioaji
+
+      - name: Checkout rsolace
+        uses: actions/checkout@v4
+        with:
+          repository: Yvictor/rsolace
+          path: rsolace
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Install LLVM and Clang
+        uses: KyleMayes/install-llvm-action@v2
+        with:
+          version: "10.0"
+
+      - name: Build standalone binary
+        working-directory: rshioaji
+        run: cargo build --release
+
+      - name: Copy binary to wheel data
+        run: |
+          mkdir -p rshioaji/python/shioaji.data/scripts
+          cp rshioaji/target/release/shioaji rshioaji/python/shioaji.data/scripts/
+
+      - name: Install maturin with zig
+        run: pip install maturin[zig]
+
+      - name: Build wheels
+        working-directory: rshioaji/python
+        run: maturin build --release --out dist --find-interpreter --compatibility manylinux2014 --zig
+
+      - name: Upload wheel artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheel-linux-x86_64
+          path: rshioaji/python/dist/*.whl
+
+      - name: Archive standalone binary
+        run: |
+          cd rshioaji/target/release
+          tar czf ../../../shioaji-${{ inputs.version }}-Linux-x86_64.tar.gz shioaji
+
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: binary-linux-x86_64
+          path: shioaji-*.tar.gz
+
+  build-wheels-linux-aarch64:
+    name: Build wheels (Linux aarch64)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout private repo
+        uses: actions/checkout@v4
+        with:
+          repository: Yvictor/rshioaji
+          ref: ${{ inputs.version }}
+          ssh-key: ${{ secrets.PRIVATE_REPO_DEPLOY_KEY }}
+          path: rshioaji
+
+      - name: Checkout rsolace
+        uses: actions/checkout@v4
+        with:
+          repository: Yvictor/rsolace
+          path: rsolace
+
+      - name: Build on aarch64
+        uses: uraimo/run-on-arch-action@v3
+        with:
+          arch: aarch64
+          distro: ubuntu22.04
+          githubToken: ${{ github.token }}
+          dockerRunArgs: -v ${{ github.workspace }}:/workspace
+          install: |
+            apt update
+            apt install -y libclang-dev build-essential curl pkg-config
+            curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain stable -y
+            echo 'source $HOME/.cargo/env' >> $HOME/.bashrc
+            curl -LsSf https://astral.sh/uv/install.sh | sh
+            echo 'export PATH="$HOME/.local/bin:$PATH"' >> $HOME/.bashrc
+            export PATH="$HOME/.local/bin:$PATH"
+            uv python install 3.12
+            uv tool install maturin
+          run: |
+            source $HOME/.cargo/env
+            export PATH="$HOME/.local/bin:$PATH"
+            cd /workspace/rshioaji
+            cargo build --release
+            mkdir -p python/shioaji.data/scripts
+            cp target/release/shioaji python/shioaji.data/scripts/
+            cd python
+            maturin build --release --out dist --find-interpreter
+            cd /workspace/rshioaji/target/release
+            tar czf /workspace/shioaji-${{ inputs.version }}-Linux-aarch64.tar.gz shioaji
+
+      - name: Upload wheel artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheel-linux-aarch64
+          path: rshioaji/python/dist/*.whl
+
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: binary-linux-aarch64
+          path: shioaji-*.tar.gz
+
+  build-wheels-macos:
+    name: Build wheels (macOS aarch64)
+    runs-on: macos-latest
     steps:
       - name: Checkout private repo
         uses: actions/checkout@v4
@@ -57,126 +168,100 @@ jobs:
         run: cargo build --release
 
       - name: Copy binary to wheel data
-        shell: bash
         run: |
           mkdir -p rshioaji/python/shioaji.data/scripts
-          if [ "$RUNNER_OS" = "Windows" ]; then
-            cp rshioaji/target/release/shioaji.exe rshioaji/python/shioaji.data/scripts/
-          else
-            cp rshioaji/target/release/shioaji rshioaji/python/shioaji.data/scripts/
-          fi
+          cp rshioaji/target/release/shioaji rshioaji/python/shioaji.data/scripts/
 
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
-          target: ${{ matrix.target }}
+          target: aarch64
           args: --release --out dist
-          manylinux: auto
           working-directory: rshioaji/python
 
       - name: Upload wheel artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: wheel-${{ matrix.os }}-${{ matrix.target }}
+          name: wheel-macos-aarch64
           path: rshioaji/python/dist/*.whl
 
-      - name: Archive standalone binary (unix)
-        if: runner.os != 'Windows'
+      - name: Archive standalone binary
         run: |
           cd rshioaji/target/release
-          tar czf ../../../shioaji-${{ inputs.version }}-${{ runner.os }}-${{ matrix.target }}.tar.gz shioaji
+          tar czf ../../../shioaji-${{ inputs.version }}-macOS-aarch64.tar.gz shioaji
 
-      - name: Archive standalone binary (windows)
-        if: runner.os == 'Windows'
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: binary-macos-aarch64
+          path: shioaji-*.tar.gz
+
+  build-wheels-windows:
+    name: Build wheels (Windows x86_64)
+    runs-on: windows-latest
+    steps:
+      - name: Checkout private repo
+        uses: actions/checkout@v4
+        with:
+          repository: Yvictor/rshioaji
+          ref: ${{ inputs.version }}
+          ssh-key: ${{ secrets.PRIVATE_REPO_DEPLOY_KEY }}
+          path: rshioaji
+
+      - name: Checkout rsolace
+        uses: actions/checkout@v4
+        with:
+          repository: Yvictor/rsolace
+          path: rsolace
+
+      - name: Setup Clang
+        uses: egor-tensin/setup-clang@v1
+        with:
+          version: latest
+
+      - name: Setup MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Build standalone binary
+        working-directory: rshioaji
+        run: cargo build --release
+
+      - name: Copy binary to wheel data
+        shell: bash
+        run: |
+          mkdir -p rshioaji/python/shioaji.data/scripts
+          cp rshioaji/target/release/shioaji.exe rshioaji/python/shioaji.data/scripts/
+
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          target: x86_64
+          args: --release --out dist
+          working-directory: rshioaji/python
+
+      - name: Upload wheel artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheel-windows-x86_64
+          path: rshioaji/python/dist/*.whl
+
+      - name: Archive standalone binary
         shell: powershell
         run: |
           Compress-Archive -Path rshioaji/target/release/shioaji.exe -DestinationPath shioaji-${{ inputs.version }}-Windows-x86_64.zip
 
-      - name: Upload binary artifacts
+      - name: Upload binary artifact
         uses: actions/upload-artifact@v4
         with:
-          name: binary-${{ matrix.os }}-${{ matrix.target }}
-          path: |
-            shioaji-*.tar.gz
-            shioaji-*.zip
+          name: binary-windows-x86_64
+          path: shioaji-*.zip
 
   # build-wheels-free-threaded:
-  #   name: Build free-threaded wheels (${{ matrix.os }} ${{ matrix.target }})
-  #   runs-on: ${{ matrix.os }}
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       include:
-  #         - os: ubuntu-latest
-  #           target: x86_64
-  #         - os: ubuntu-latest
-  #           target: aarch64
-  #         - os: macos-13
-  #           target: x86_64
-  #         - os: macos-latest
-  #           target: aarch64
-  #         - os: windows-latest
-  #           target: x86_64
-  #   steps:
-  #     - name: Checkout private repo
-  #       uses: actions/checkout@v4
-  #       with:
-  #         repository: Yvictor/rshioaji
-  #         ref: ${{ inputs.version }}
-  #         ssh-key: ${{ secrets.PRIVATE_REPO_DEPLOY_KEY }}
-  #         path: rshioaji
-  #     - name: Checkout rsolace
-  #       uses: actions/checkout@v4
-  #       with:
-  #         repository: Yvictor/rsolace
-  #         path: rsolace
-  #     - name: Build wheels (free-threaded)
-  #       uses: PyO3/maturin-action@v1
-  #       with:
-  #         target: ${{ matrix.target }}
-  #         args: --release --out dist --features testing
-  #         manylinux: auto
-  #         working-directory: rshioaji/python
-  #     - name: Upload wheel artifacts
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         name: wheel-free-threaded-${{ matrix.os }}-${{ matrix.target }}
-  #         path: rshioaji/python/dist/*.whl
-
-  # build-binary-linux-aarch64:
-  #   name: Build binary (Linux aarch64)
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout private repo
-  #       uses: actions/checkout@v4
-  #       with:
-  #         repository: Yvictor/rshioaji
-  #         ref: ${{ inputs.version }}
-  #         ssh-key: ${{ secrets.PRIVATE_REPO_DEPLOY_KEY }}
-  #         path: rshioaji
-  #     - name: Checkout rsolace
-  #       uses: actions/checkout@v4
-  #       with:
-  #         repository: Yvictor/rsolace
-  #         path: rsolace
-  #     - name: Install cross
-  #       run: cargo install cross
-  #     - name: Build binary
-  #       working-directory: rshioaji
-  #       run: cross build --release --target aarch64-unknown-linux-gnu
-  #     - name: Archive binary
-  #       run: |
-  #         cd rshioaji/target/aarch64-unknown-linux-gnu/release
-  #         tar czf ../../../../shioaji-${{ inputs.version }}-Linux-aarch64.tar.gz shioaji
-  #     - name: Upload binary artifact
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         name: binary-linux-aarch64
-  #         path: shioaji-*.tar.gz
+  #   TODO: add free-threaded Python 3.14t builds
 
   publish-pypi:
     name: Publish to PyPI
-    needs: [build-wheels]
+    needs: [build-wheels-linux, build-wheels-linux-aarch64, build-wheels-macos, build-wheels-windows]
     runs-on: ubuntu-latest
     environment:
       name: pypi
@@ -196,7 +281,7 @@ jobs:
 
   github-release:
     name: Create GitHub Release
-    needs: [build-wheels]
+    needs: [build-wheels-linux, build-wheels-linux-aarch64, build-wheels-macos, build-wheels-windows]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout sinotrade/rshioaji
