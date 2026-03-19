@@ -86,57 +86,51 @@ jobs:
           name: binary-linux-x86_64
           path: shioaji-*.tar.gz
 
-  build-wheels-linux-aarch64:
-    name: Build wheels (Linux aarch64)
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout private repo
-        uses: actions/checkout@v4
-        with:
-          repository: Yvictor/rshioaji
-          ref: ${{ inputs.version }}
-          ssh-key: ${{ secrets.PRIVATE_REPO_DEPLOY_KEY }}
-          path: rshioaji
-
-      - name: Checkout rsolace
-        uses: actions/checkout@v4
-        with:
-          repository: Yvictor/rsolace
-          path: rsolace
-
-      - name: Build on aarch64
-        uses: uraimo/run-on-arch-action@v3
-        with:
-          arch: aarch64
-          distro: ubuntu22.04
-          githubToken: ${{ github.token }}
-          dockerRunArgs: -v ${{ github.workspace }}:/workspace
-          install: |
-            apt update
-            apt install -y libclang-dev build-essential curl pkg-config
-            curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain stable -y
-            echo 'source $HOME/.cargo/env' >> $HOME/.bashrc
-            curl -LsSf https://astral.sh/uv/install.sh | sh
-            echo 'export PATH="$HOME/.local/bin:$PATH"' >> $HOME/.bashrc
-            export PATH="$HOME/.local/bin:$PATH"
-            uv python install 3.12
-            uv tool install maturin
-          run: |
-            source $HOME/.cargo/env
-            export PATH="$HOME/.local/bin:$PATH"
-            cd /workspace/rshioaji
-            cargo build --release
-            mkdir -p python/shioaji.data/scripts
-            cp target/release/shioaji python/shioaji.data/scripts/
-            cd python
-            maturin build --release --out dist --find-interpreter
-            cd /workspace/rshioaji/target/release
-            tar czf /workspace/shioaji-${{ inputs.version }}-Linux-aarch64.tar.gz shioaji
-
-      - name: Upload wheel artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: wheel-linux-aarch64
+  # build-wheels-linux-aarch64:
+  #   name: Build wheels (Linux aarch64)
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout private repo
+  #       uses: actions/checkout@v4
+  #       with:
+  #         repository: Yvictor/rshioaji
+  #         ref: ${{ inputs.version }}
+  #         ssh-key: ${{ secrets.PRIVATE_REPO_DEPLOY_KEY }}
+  #         path: rshioaji
+  #     - name: Checkout rsolace
+  #       uses: actions/checkout@v4
+  #       with:
+  #         repository: Yvictor/rsolace
+  #         path: rsolace
+  #     - name: Build on aarch64
+  #       uses: uraimo/run-on-arch-action@v3
+  #       with:
+  #         arch: aarch64
+  #         distro: ubuntu22.04
+  #         githubToken: ${{ github.token }}
+  #         dockerRunArgs: -v ${{ github.workspace }}:/workspace
+  #         install: |
+  #           apt update
+  #           apt install -y libclang-dev build-essential curl pkg-config
+  #           curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain stable -y
+  #           curl -LsSf https://astral.sh/uv/install.sh | sh
+  #           export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
+  #           uv python install 3.12
+  #           uv tool install maturin
+  #         run: |
+  #           export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
+  #           cd /workspace/rshioaji
+  #           cargo build --release
+  #           mkdir -p python/shioaji.data/scripts
+  #           cp target/release/shioaji python/shioaji.data/scripts/
+  #           cd python
+  #           maturin build --release --out dist --find-interpreter
+  #           cd /workspace/rshioaji/target/release
+  #           tar czf /workspace/shioaji-${{ inputs.version }}-Linux-aarch64.tar.gz shioaji
+  #     - name: Upload wheel artifacts
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: wheel-linux-aarch64
           path: rshioaji/python/dist/*.whl
 
       - name: Upload binary artifact
@@ -261,7 +255,7 @@ jobs:
 
   publish-pypi:
     name: Publish to PyPI
-    needs: [build-wheels-linux, build-wheels-linux-aarch64, build-wheels-macos, build-wheels-windows]
+    needs: [build-wheels-linux, build-wheels-macos, build-wheels-windows]
     runs-on: ubuntu-latest
     environment:
       name: pypi
@@ -281,7 +275,7 @@ jobs:
 
   github-release:
     name: Create GitHub Release
-    needs: [build-wheels-linux, build-wheels-linux-aarch64, build-wheels-macos, build-wheels-windows]
+    needs: [build-wheels-linux, build-wheels-macos, build-wheels-windows]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout sinotrade/rshioaji
