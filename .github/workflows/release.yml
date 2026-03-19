@@ -1,0 +1,205 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., v0.1.0)'
+        required: true
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  build-wheels:
+    name: Build wheels (${{ matrix.os }} ${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64
+          - os: ubuntu-latest
+            target: aarch64
+          - os: macos-13
+            target: x86_64
+          - os: macos-latest
+            target: aarch64
+          - os: windows-latest
+            target: x86_64
+    steps:
+      - name: Checkout private repo
+        uses: actions/checkout@v4
+        with:
+          repository: Yvictor/rshioaji
+          ref: ${{ inputs.version }}
+          ssh-key: ${{ secrets.PRIVATE_REPO_DEPLOY_KEY }}
+
+      - name: Build standalone binary
+        if: matrix.target == 'x86_64' || runner.os != 'Linux'
+        run: cargo build --release
+
+      - name: Copy binary to wheel data
+        if: matrix.target == 'x86_64' || runner.os != 'Linux'
+        shell: bash
+        run: |
+          mkdir -p python/shioaji.data/scripts
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            cp target/release/shioaji.exe python/shioaji.data/scripts/
+          else
+            cp target/release/shioaji python/shioaji.data/scripts/
+          fi
+
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.target }}
+          args: --release --out dist
+          manylinux: auto
+          working-directory: python
+
+      - name: Upload wheel artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheel-${{ matrix.os }}-${{ matrix.target }}
+          path: python/dist/*.whl
+
+      - name: Archive standalone binary (unix)
+        if: (matrix.target == 'x86_64' || runner.os != 'Linux') && runner.os != 'Windows'
+        run: |
+          cd target/release
+          tar czf ../../shioaji-${{ inputs.version }}-${{ runner.os }}-${{ matrix.target }}.tar.gz shioaji
+
+      - name: Archive standalone binary (windows)
+        if: runner.os == 'Windows' && matrix.target == 'x86_64'
+        shell: powershell
+        run: |
+          Compress-Archive -Path target/release/shioaji.exe -DestinationPath shioaji-${{ inputs.version }}-Windows-x86_64.zip
+
+      - name: Upload binary artifacts
+        if: matrix.target == 'x86_64' || runner.os != 'Linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: binary-${{ matrix.os }}-${{ matrix.target }}
+          path: |
+            shioaji-*.tar.gz
+            shioaji-*.zip
+
+  build-wheels-free-threaded:
+    name: Build free-threaded wheels (${{ matrix.os }} ${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64
+          - os: ubuntu-latest
+            target: aarch64
+          - os: macos-13
+            target: x86_64
+          - os: macos-latest
+            target: aarch64
+          - os: windows-latest
+            target: x86_64
+    steps:
+      - name: Checkout private repo
+        uses: actions/checkout@v4
+        with:
+          repository: Yvictor/rshioaji
+          ref: ${{ inputs.version }}
+          ssh-key: ${{ secrets.PRIVATE_REPO_DEPLOY_KEY }}
+
+      - name: Build wheels (free-threaded)
+        uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.target }}
+          args: --release --out dist --features testing
+          manylinux: auto
+          working-directory: python
+
+      - name: Upload wheel artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheel-free-threaded-${{ matrix.os }}-${{ matrix.target }}
+          path: python/dist/*.whl
+
+  build-binary-linux-aarch64:
+    name: Build binary (Linux aarch64)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout private repo
+        uses: actions/checkout@v4
+        with:
+          repository: Yvictor/rshioaji
+          ref: ${{ inputs.version }}
+          ssh-key: ${{ secrets.PRIVATE_REPO_DEPLOY_KEY }}
+
+      - name: Install cross
+        run: cargo install cross
+
+      - name: Build binary
+        run: cross build --release --target aarch64-unknown-linux-gnu
+
+      - name: Archive binary
+        run: |
+          cd target/aarch64-unknown-linux-gnu/release
+          tar czf ../../../shioaji-${{ inputs.version }}-Linux-aarch64.tar.gz shioaji
+
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: binary-linux-aarch64
+          path: shioaji-*.tar.gz
+
+  publish-pypi:
+    name: Publish to PyPI
+    needs: [build-wheels, build-wheels-free-threaded]
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/rshioaji/
+    permissions:
+      id-token: write
+    steps:
+      - name: Download wheel artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: wheel-*
+          merge-multiple: true
+          path: dist/
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+  github-release:
+    name: Create GitHub Release
+    needs: [build-wheels, build-wheels-free-threaded, build-binary-linux-aarch64]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sinotrade/rshioaji
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+
+      - name: Organize release assets
+        run: |
+          mkdir -p release
+          find artifacts -name '*.whl' -exec cp {} release/ \;
+          find artifacts -name '*.tar.gz' -exec cp {} release/ \;
+          find artifacts -name '*.zip' -exec cp {} release/ \;
+          cp install.sh release/
+          cp install.ps1 release/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.version }}
+          name: ${{ inputs.version }}
+          files: release/*
+          generate_release_notes: true
