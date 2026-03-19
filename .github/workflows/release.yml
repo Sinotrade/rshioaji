@@ -4,8 +4,16 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Release version (e.g., v0.1.0)'
+        description: 'Release version (e.g., v1.5.0b1)'
         required: true
+      release_notes:
+        description: 'Release notes'
+        required: false
+        default: ''
+      prerelease:
+        description: 'Is this a prerelease?'
+        required: false
+        default: 'false'
 
 permissions:
   contents: write
@@ -201,5 +209,6 @@ jobs:
         with:
           tag_name: ${{ inputs.version }}
           name: ${{ inputs.version }}
+          body: ${{ inputs.release_notes }}
+          prerelease: ${{ inputs.prerelease == 'true' }}
           files: release/*
-          generate_release_notes: true
