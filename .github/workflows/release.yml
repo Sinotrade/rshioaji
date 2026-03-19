@@ -131,13 +131,12 @@ jobs:
   #       uses: actions/upload-artifact@v4
   #       with:
   #         name: wheel-linux-aarch64
-          path: rshioaji/python/dist/*.whl
-
-      - name: Upload binary artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: binary-linux-aarch64
-          path: shioaji-*.tar.gz
+  #         path: rshioaji/python/dist/*.whl
+  #     - name: Upload binary artifact
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: binary-linux-aarch64
+  #         path: shioaji-*.tar.gz
 
   build-wheels-macos:
     name: Build wheels (macOS aarch64)
