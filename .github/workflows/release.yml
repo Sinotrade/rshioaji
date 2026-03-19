@@ -69,6 +69,7 @@ jobs:
         working-directory: rshioaji/python
         env:
           CARGO_TARGET_DIR: ${{ github.workspace }}/rshioaji/target
+          RUSTFLAGS: -Awarnings
         run: maturin build --release --out dist --find-interpreter --compatibility manylinux2014 --zig
 
       - name: Upload wheel artifacts
