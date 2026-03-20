@@ -40,6 +40,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Yvictor/rsolace
+          ref: v0.3.10
           path: rsolace
 
       - name: Setup Rust
@@ -188,6 +189,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Yvictor/rsolace
+          ref: v0.3.10
           path: rsolace
 
       - name: Install pnpm
@@ -206,6 +208,8 @@ jobs:
 
       - name: Build standalone binary
         working-directory: rshioaji
+        env:
+          RUSTFLAGS: -Awarnings
         run: cargo build --release
 
       - name: Copy binary to wheel data
@@ -269,6 +273,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Yvictor/rsolace
+          ref: v0.3.10
           path: rsolace
 
       - name: Install pnpm
@@ -295,6 +300,8 @@ jobs:
 
       - name: Build standalone binary
         working-directory: rshioaji
+        env:
+          RUSTFLAGS: -Awarnings
         run: cargo build --release
 
       - name: Copy binary to wheel data

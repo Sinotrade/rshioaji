@@ -26,6 +26,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Yvictor/rsolace
+          ref: v0.3.10
           path: rsolace
 
       - name: Set working directory
@@ -86,6 +87,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Yvictor/rsolace
+          ref: v0.3.10
           path: rsolace
 
       - name: Install pnpm
