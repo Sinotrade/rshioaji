@@ -31,6 +31,24 @@ jobs:
       - name: Set working directory
         run: echo "WORKDIR=${{ github.workspace }}/rshioaji" >> $GITHUB_ENV
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Build dashboard
+        working-directory: rshioaji/dashboard
+        run: pnpm install && pnpm build
+
+      - name: Lint dashboard
+        working-directory: rshioaji/dashboard
+        run: pnpm lint
+
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
@@ -69,6 +87,20 @@ jobs:
         with:
           repository: Yvictor/rsolace
           path: rsolace
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Build dashboard
+        working-directory: rshioaji/dashboard
+        run: pnpm install && pnpm build
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable

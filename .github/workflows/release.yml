@@ -4,8 +4,12 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Release version (e.g., v1.5.0b1)'
+        description: 'Release version (e.g., v1.5.0b2)'
         required: true
+      title:
+        description: 'Release title'
+        required: false
+        default: ''
       release_notes:
         description: 'Release notes'
         required: false
@@ -47,6 +51,20 @@ jobs:
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: stable
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Build dashboard
+        working-directory: rshioaji/dashboard
+        run: pnpm install && pnpm build
 
       - name: Install LLVM and Clang
         uses: KyleMayes/install-llvm-action@v2
@@ -159,6 +177,20 @@ jobs:
           repository: Yvictor/rsolace
           path: rsolace
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Build dashboard
+        working-directory: rshioaji/dashboard
+        run: pnpm install && pnpm build
+
       - name: Build standalone binary
         working-directory: rshioaji
         run: cargo build --release
@@ -211,6 +243,20 @@ jobs:
         with:
           repository: Yvictor/rsolace
           path: rsolace
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Build dashboard
+        working-directory: rshioaji/dashboard
+        run: pnpm install && pnpm build
 
       - name: Setup Clang
         uses: egor-tensin/setup-clang@v1
@@ -305,7 +351,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ inputs.version }}
-          name: ${{ inputs.version }}
+          name: ${{ inputs.title || inputs.version }}
           body: ${{ inputs.release_notes }}
           prerelease: ${{ inputs.prerelease == 'true' }}
           files: release/*
