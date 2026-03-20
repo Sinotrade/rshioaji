@@ -42,11 +42,6 @@ jobs:
           repository: Yvictor/rsolace
           path: rsolace
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
       - name: Setup Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
@@ -80,20 +75,36 @@ jobs:
           mkdir -p rshioaji/python/shioaji.data/scripts
           cp rshioaji/target/release/shioaji rshioaji/python/shioaji.data/scripts/
 
-      - name: Install maturin with zig
-        run: pip install maturin[zig]
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
 
       - name: Build wheels
         working-directory: rshioaji/python
         env:
-          CARGO_TARGET_DIR: ${{ github.workspace }}/rshioaji/target
           RUSTFLAGS: -Awarnings
-        run: maturin build --release --out dist --find-interpreter --compatibility manylinux2014 --zig
+        # zig required for manylinux2014 (native glibc too new). No cache sharing with cargo build.
+        run: |
+          mkdir -p shioaji.data/scripts
+          uv run --python 3.12 --with 'maturin[zig]' maturin build --release --out dist --find-interpreter --compatibility manylinux2014 --zig
 
       - name: Upload wheel artifacts
         uses: actions/upload-artifact@v4
         with:
           name: wheel-linux-x86_64
+          path: rshioaji/python/dist/*.whl
+
+      - name: Build free-threaded wheels
+        working-directory: rshioaji/python
+        env:
+          RUSTFLAGS: -Awarnings
+        run: |
+          rm -rf dist
+          uv run --python 3.14t --with 'maturin[zig]' maturin build --release --out dist --find-interpreter --no-default-features --compatibility manylinux2014 --zig
+
+      - name: Upload free-threaded wheel artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheel-free-threaded-linux-x86_64
           path: rshioaji/python/dist/*.whl
 
       - name: Archive standalone binary
@@ -200,19 +211,33 @@ jobs:
           mkdir -p rshioaji/python/shioaji.data/scripts
           cp rshioaji/target/release/shioaji rshioaji/python/shioaji.data/scripts/
 
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
       - name: Build wheels
-        uses: PyO3/maturin-action@v1
-        with:
-          target: aarch64
-          args: --release --out dist
-          working-directory: rshioaji/python
+        working-directory: rshioaji/python
         env:
           CARGO_TARGET_DIR: ${{ github.workspace }}/rshioaji/target
+        run: uv run --python 3.12 --with maturin maturin build --release --out dist
 
       - name: Upload wheel artifacts
         uses: actions/upload-artifact@v4
         with:
           name: wheel-macos-aarch64
+          path: rshioaji/python/dist/*.whl
+
+      - name: Build free-threaded wheels
+        working-directory: rshioaji/python
+        env:
+          CARGO_TARGET_DIR: ${{ github.workspace }}/rshioaji/target
+        run: |
+          rm -rf dist
+          uv run --python 3.14t --with maturin maturin build --release --out dist --find-interpreter --no-default-features
+
+      - name: Upload free-threaded wheel artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheel-free-threaded-macos-aarch64
           path: rshioaji/python/dist/*.whl
 
       - name: Archive standalone binary
@@ -276,19 +301,34 @@ jobs:
           mkdir -p rshioaji/python/shioaji.data/scripts
           cp rshioaji/target/release/shioaji.exe rshioaji/python/shioaji.data/scripts/
 
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
       - name: Build wheels
-        uses: PyO3/maturin-action@v1
-        with:
-          target: x86_64
-          args: --release --out dist
-          working-directory: rshioaji/python
+        working-directory: rshioaji/python
         env:
           CARGO_TARGET_DIR: ${{ github.workspace }}/rshioaji/target
+        run: uv run --python 3.12 --with maturin maturin build --release --out dist
 
       - name: Upload wheel artifacts
         uses: actions/upload-artifact@v4
         with:
           name: wheel-windows-x86_64
+          path: rshioaji/python/dist/*.whl
+
+      - name: Build free-threaded wheels
+        working-directory: rshioaji/python
+        env:
+          CARGO_TARGET_DIR: ${{ github.workspace }}/rshioaji/target
+        shell: bash
+        run: |
+          rm -rf dist
+          uv run --python 3.14t --with maturin maturin build --release --out dist --find-interpreter --no-default-features
+
+      - name: Upload free-threaded wheel artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheel-free-threaded-windows-x86_64
           path: rshioaji/python/dist/*.whl
 
       - name: Archive standalone binary
