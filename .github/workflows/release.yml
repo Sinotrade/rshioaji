@@ -303,6 +303,7 @@ jobs:
         env:
           RUSTFLAGS: -Awarnings
           CARGO_PROFILE_RELEASE_LTO: thin
+          CARGO_PROFILE_RELEASE_CODEGEN_UNITS: 16
         run: cargo build --release
 
       - name: Copy binary to wheel data
@@ -319,6 +320,7 @@ jobs:
         env:
           CARGO_TARGET_DIR: ${{ github.workspace }}/rshioaji/target
           CARGO_PROFILE_RELEASE_LTO: thin
+          CARGO_PROFILE_RELEASE_CODEGEN_UNITS: 16
         run: uvx --python 3.12 --from maturin maturin build --release --out dist
 
       - name: Upload wheel artifacts
