@@ -8,12 +8,17 @@ $Repo = "sinotrade/rshioaji"
 $BinaryName = "shioaji"
 $InstallDir = if ($env:INSTALL_DIR) { $env:INSTALL_DIR } else { "$env:USERPROFILE\.local\bin" }
 
+# Check for 32-bit
+if (-not [Environment]::Is64BitProcess) {
+    Write-Error "shioaji does not support 32-bit Windows."
+    exit 1
+}
+
 # Detect architecture
-$Arch = "$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture)"
-switch ($Arch) {
-    "X64"   { $ArchName = "x86_64" }
-    "Arm64" { $ArchName = "aarch64" }
-    default { Write-Error "Unsupported architecture: $Arch"; exit 1 }
+if ($env:PROCESSOR_ARCHITECTURE -eq "ARM64") {
+    $ArchName = "aarch64"
+} else {
+    $ArchName = "x86_64"
 }
 
 # Get latest version
