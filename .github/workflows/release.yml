@@ -302,6 +302,7 @@ jobs:
         working-directory: rshioaji
         env:
           RUSTFLAGS: -Awarnings
+          CARGO_PROFILE_RELEASE_LTO: thin
         run: cargo build --release
 
       - name: Copy binary to wheel data
@@ -317,6 +318,7 @@ jobs:
         working-directory: rshioaji/python
         env:
           CARGO_TARGET_DIR: ${{ github.workspace }}/rshioaji/target
+          CARGO_PROFILE_RELEASE_LTO: thin
         run: uvx --python 3.12 --from maturin maturin build --release --out dist
 
       - name: Upload wheel artifacts
