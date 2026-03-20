@@ -1,5 +1,7 @@
 # Install shioaji CLI binary for Windows
 # Usage: irm https://raw.githubusercontent.com/sinotrade/rshioaji/main/install.ps1 | iex
+# Pre-release: $env:CHANNEL="prerelease"; irm ... | iex
+# Specific version: $env:VERSION="v1.5.0b2"; irm ... | iex
 $ErrorActionPreference = "Stop"
 
 $Repo = "sinotrade/rshioaji"
@@ -15,9 +17,16 @@ switch ($Arch) {
 }
 
 # Get latest version
+# Set CHANNEL=prerelease to install pre-release versions
+$Channel = if ($env:CHANNEL) { $env:CHANNEL } else { "stable" }
 if (-not $env:VERSION) {
-    $Release = Invoke-RestMethod "https://api.github.com/repos/$Repo/releases/latest"
-    $Version = $Release.tag_name
+    if ($Channel -eq "prerelease") {
+        $Releases = Invoke-RestMethod "https://api.github.com/repos/$Repo/releases"
+        $Version = $Releases[0].tag_name
+    } else {
+        $Release = Invoke-RestMethod "https://api.github.com/repos/$Repo/releases/latest"
+        $Version = $Release.tag_name
+    }
 } else {
     $Version = $env:VERSION
 }

@@ -1,6 +1,8 @@
 #!/bin/sh
 # Install shioaji CLI binary
 # Usage: curl -fsSL https://raw.githubusercontent.com/sinotrade/rshioaji/main/install.sh | sh
+# Pre-release: curl -fsSL ... | CHANNEL=prerelease sh
+# Specific version: curl -fsSL ... | VERSION=v1.5.0b2 sh
 set -e
 
 REPO="sinotrade/rshioaji"
@@ -23,9 +25,15 @@ case "$ARCH" in
     *)               echo "Unsupported architecture: $ARCH"; exit 1 ;;
 esac
 
-# Get latest version
+# Get version
+# Set CHANNEL=prerelease to install pre-release versions
+CHANNEL="${CHANNEL:-stable}"
 if [ -z "$VERSION" ]; then
-    VERSION=$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/')
+    if [ "$CHANNEL" = "prerelease" ]; then
+        VERSION=$(curl -fsSL "https://api.github.com/repos/$REPO/releases" | grep '"tag_name"' | head -1 | sed -E 's/.*"([^"]+)".*/\1/')
+    else
+        VERSION=$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/')
+    fi
     if [ -z "$VERSION" ]; then
         echo "Failed to determine latest version"
         exit 1

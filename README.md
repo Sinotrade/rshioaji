@@ -48,12 +48,23 @@ shioaji --help
 
 **Linux / macOS:**
 ```bash
+# Stable
 curl -fsSL https://raw.githubusercontent.com/sinotrade/rshioaji/main/install.sh | sh
+
+# Pre-release
+curl -fsSL https://raw.githubusercontent.com/sinotrade/rshioaji/main/install.sh | CHANNEL=prerelease sh
+
+# Specific version
+curl -fsSL https://raw.githubusercontent.com/sinotrade/rshioaji/main/install.sh | VERSION=v1.5.0b2 sh
 ```
 
 **Windows (PowerShell):**
 ```powershell
+# Stable
 irm https://raw.githubusercontent.com/sinotrade/rshioaji/main/install.ps1 | iex
+
+# Pre-release
+$env:CHANNEL="prerelease"; irm https://raw.githubusercontent.com/sinotrade/rshioaji/main/install.ps1 | iex
 ```
 
 ## Usage
