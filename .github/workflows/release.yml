@@ -66,13 +66,9 @@ jobs:
         with:
           version: "10.0"
 
-      - name: Setup sccache
-        uses: mozilla-actions/sccache-action@v0.0.5
-
       - name: Build standalone binary
         working-directory: rshioaji
         env:
-          RUSTC_WRAPPER: sccache
           RUSTFLAGS: -Awarnings
         run: cargo build --release
 
@@ -87,9 +83,8 @@ jobs:
       - name: Build wheels
         working-directory: rshioaji/python
         env:
-          RUSTC_WRAPPER: sccache
           RUSTFLAGS: -Awarnings
-        # zig required for manylinux2014 (native glibc too new). sccache shares cache across targets.
+        # zig required for manylinux2014 (native glibc too new). no cache sharing with cargo build.
         run: |
           mkdir -p shioaji.data/scripts
           uvx --python 3.12 --from 'maturin[zig]' maturin build --release --out dist --compatibility manylinux2014 --zig
@@ -103,7 +98,6 @@ jobs:
       - name: Build free-threaded wheels
         working-directory: rshioaji/python
         env:
-          RUSTC_WRAPPER: sccache
           RUSTFLAGS: -Awarnings
         run: |
           rm -rf dist
@@ -210,13 +204,8 @@ jobs:
         working-directory: rshioaji/dashboard
         run: pnpm install && pnpm build
 
-      - name: Setup sccache
-        uses: mozilla-actions/sccache-action@v0.0.5
-
       - name: Build standalone binary
         working-directory: rshioaji
-        env:
-          RUSTC_WRAPPER: sccache
         run: cargo build --release
 
       - name: Copy binary to wheel data
@@ -231,7 +220,6 @@ jobs:
         working-directory: rshioaji/python
         env:
           CARGO_TARGET_DIR: ${{ github.workspace }}/rshioaji/target
-          RUSTC_WRAPPER: sccache
         run: uvx --python 3.12 --from maturin maturin build --release --out dist
 
       - name: Upload wheel artifacts
@@ -244,7 +232,6 @@ jobs:
         working-directory: rshioaji/python
         env:
           CARGO_TARGET_DIR: ${{ github.workspace }}/rshioaji/target
-          RUSTC_WRAPPER: sccache
         run: |
           rm -rf dist
           uvx --python 3.14t --from maturin maturin build --release --out dist -i python3.14t --no-default-features
@@ -306,13 +293,8 @@ jobs:
       - name: Setup MSVC
         uses: ilammy/msvc-dev-cmd@v1
 
-      - name: Setup sccache
-        uses: mozilla-actions/sccache-action@v0.0.5
-
       - name: Build standalone binary
         working-directory: rshioaji
-        env:
-          RUSTC_WRAPPER: sccache
         run: cargo build --release
 
       - name: Copy binary to wheel data
@@ -328,7 +310,6 @@ jobs:
         working-directory: rshioaji/python
         env:
           CARGO_TARGET_DIR: ${{ github.workspace }}/rshioaji/target
-          RUSTC_WRAPPER: sccache
         run: uvx --python 3.12 --from maturin maturin build --release --out dist
 
       - name: Upload wheel artifacts
@@ -337,21 +318,20 @@ jobs:
           name: wheel-windows-x86_64
           path: rshioaji/python/dist/*.whl
 
-      - name: Build free-threaded wheels
-        working-directory: rshioaji\python
-        env:
-          CARGO_TARGET_DIR: ${{ github.workspace }}\rshioaji\target
-          RUSTC_WRAPPER: sccache
-        shell: pwsh
-        run: |
-          if (Test-Path dist) { Remove-Item -Recurse -Force dist }
-          uvx --python 3.14t --from maturin maturin build --release --out dist -i python3.14t --no-default-features
-
-      - name: Upload free-threaded wheel artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: wheel-free-threaded-windows-x86_64
-          path: rshioaji/python/dist/*.whl
+      # Windows free-threaded: needs PyO3 generate-import-lib feature
+      # - name: Build free-threaded wheels
+      #   working-directory: rshioaji\python
+      #   env:
+      #     CARGO_TARGET_DIR: ${{ github.workspace }}\rshioaji\target
+      #   shell: pwsh
+      #   run: |
+      #     if (Test-Path dist) { Remove-Item -Recurse -Force dist }
+      #     uvx --python 3.14t --from maturin maturin build --release --out dist -i python3.14t --no-default-features
+      # - name: Upload free-threaded wheel artifacts
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: wheel-free-threaded-windows-x86_64
+      #     path: rshioaji/python/dist/*.whl
 
       - name: Archive standalone binary
         shell: powershell
