@@ -302,6 +302,10 @@ jobs:
         working-directory: rshioaji
         env:
           RUSTFLAGS: -Awarnings
+          # Windows MSVC linker crashes with lto=fat (STATUS_ACCESS_VIOLATION)
+          # lto=thin also crashes. Only lto=false works.
+          # Root cause was kanal 9a4b98d (0.2.0-beta1). Rolled back to dc47624 (0.1.1).
+          # Keep lto=fat (from Cargo.toml profile.release) — works with old kanal.
         run: cargo build --release
 
       - name: Copy binary to wheel data
