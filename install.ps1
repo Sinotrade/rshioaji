@@ -9,7 +9,7 @@ $BinaryName = "shioaji"
 $InstallDir = if ($env:INSTALL_DIR) { $env:INSTALL_DIR } else { "$env:USERPROFILE\.local\bin" }
 
 # Detect architecture
-$Arch = [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture
+$Arch = "$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture)"
 switch ($Arch) {
     "X64"   { $ArchName = "x86_64" }
     "Arm64" { $ArchName = "aarch64" }
