@@ -115,7 +115,7 @@ jobs:
 
       - name: Build Python binding
         working-directory: rshioaji/python
-        run: uv run --with maturin maturin develop
+        run: mkdir -p shioaji.data/scripts && uv run --with maturin maturin develop
 
       - name: Run Python tests
         working-directory: rshioaji/python
