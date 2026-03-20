@@ -92,7 +92,7 @@ jobs:
         # zig required for manylinux2014 (native glibc too new). sccache shares cache across targets.
         run: |
           mkdir -p shioaji.data/scripts
-          uvx --python 3.12 --from 'maturin[zig]' maturin build --release --out dist --find-interpreter --compatibility manylinux2014 --zig
+          uvx --python 3.12 --from 'maturin[zig]' maturin build --release --out dist --compatibility manylinux2014 --zig
 
       - name: Upload wheel artifacts
         uses: actions/upload-artifact@v4
@@ -107,7 +107,7 @@ jobs:
           RUSTFLAGS: -Awarnings
         run: |
           rm -rf dist
-          uvx --python 3.14t --from 'maturin[zig]' maturin build --release --out dist --find-interpreter --no-default-features --compatibility manylinux2014 --zig
+          uvx --python 3.14t --from 'maturin[zig]' maturin build --release --out dist -i python3.14t --no-default-features --compatibility manylinux2014 --zig
 
       - name: Upload free-threaded wheel artifacts
         uses: actions/upload-artifact@v4
@@ -247,7 +247,7 @@ jobs:
           RUSTC_WRAPPER: sccache
         run: |
           rm -rf dist
-          uvx --python 3.14t --from maturin maturin build --release --out dist --find-interpreter --no-default-features
+          uvx --python 3.14t --from maturin maturin build --release --out dist -i python3.14t --no-default-features
 
       - name: Upload free-threaded wheel artifacts
         uses: actions/upload-artifact@v4
@@ -345,7 +345,7 @@ jobs:
         shell: pwsh
         run: |
           if (Test-Path dist) { Remove-Item -Recurse -Force dist }
-          uvx --python 3.14t --from maturin maturin build --release --out dist --find-interpreter --no-default-features
+          uvx --python 3.14t --from maturin maturin build --release --out dist -i python3.14t --no-default-features
 
       - name: Upload free-threaded wheel artifacts
         uses: actions/upload-artifact@v4
