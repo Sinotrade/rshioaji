@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout private repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: Yvictor/rshioaji
           ref: ${{ inputs.ref }}
@@ -23,7 +23,7 @@ jobs:
           path: rshioaji
 
       - name: Checkout rsolace
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: Yvictor/rsolace
           ref: v0.3.11
@@ -33,12 +33,12 @@ jobs:
         run: echo "WORKDIR=${{ github.workspace }}/rshioaji" >> $GITHUB_ENV
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v5
         with:
           version: 9
 
       - name: Install Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22
 
@@ -74,7 +74,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout private repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: Yvictor/rshioaji
           ref: ${{ inputs.ref }}
@@ -82,19 +82,19 @@ jobs:
           path: rshioaji
 
       - name: Checkout rsolace
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: Yvictor/rsolace
           ref: v0.3.11
           path: rsolace
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v5
         with:
           version: 9
 
       - name: Install Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22
 
@@ -111,7 +111,7 @@ jobs:
           workspaces: rshioaji
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v4
+        uses: astral-sh/setup-uv@v7
 
       - name: Build Python binding
         working-directory: rshioaji/python
