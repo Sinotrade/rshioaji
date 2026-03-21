@@ -61,12 +61,10 @@ jobs:
       - name: Check formatting
         working-directory: rshioaji
         run: cargo fmt --check
-        continue-on-error: true  # TODO: fix pre-existing fmt issues then remove
 
       - name: Clippy
         working-directory: rshioaji
         run: cargo clippy --all-targets -- -D warnings
-        continue-on-error: true  # TODO: fix pre-existing clippy warnings then remove
 
       - name: Run tests
         working-directory: rshioaji
