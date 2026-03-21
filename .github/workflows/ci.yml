@@ -26,7 +26,8 @@ jobs:
         working-directory: rshioaji
         run: |
           actual_sha=$(git rev-parse HEAD)
-          if [ "$actual_sha" != "${{ inputs.ref }}" ]; then
+          expected_full=$(git rev-parse ${{ inputs.ref }})
+          if [ "$actual_sha" != "$expected_full" ]; then
             echo "::warning::Expected SHA ${{ inputs.ref }}, got $actual_sha (branch may have advanced)"
           fi
 
