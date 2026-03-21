@@ -29,7 +29,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout private repo
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
         with:
           repository: Yvictor/rshioaji
           ref: ${{ inputs.version }}
@@ -37,14 +37,14 @@ jobs:
           path: rshioaji
 
       - name: Checkout rsolace
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
         with:
           repository: Yvictor/rsolace
           ref: v0.3.11
           path: rsolace
 
       - name: Setup Rust
-        uses: actions-rust-lang/setup-rust-toolchain@v1.15
+        uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: stable
 
@@ -87,7 +87,7 @@ jobs:
           uvx --python 3.12 --from 'maturin[zig]' maturin build --release --out dist --compatibility manylinux2014 --zig
 
       - name: Upload wheel artifacts
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v5
         with:
           name: wheel-linux-x86_64
           path: rshioaji/python/dist/*.whl
@@ -99,7 +99,7 @@ jobs:
           uvx --python 3.14t --from 'maturin[zig]' maturin build --release --out dist -i python3.14t --no-default-features --compatibility manylinux2014 --zig
 
       - name: Upload free-threaded wheel artifacts
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v5
         with:
           name: wheel-free-threaded-linux-x86_64
           path: rshioaji/python/dist/*.whl
@@ -110,7 +110,7 @@ jobs:
           tar czf ../../../shioaji-${{ inputs.version }}-Linux-x86_64.tar.gz shioaji
 
       - name: Upload binary artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v5
         with:
           name: binary-linux-x86_64
           path: shioaji-*.tar.gz
@@ -120,14 +120,14 @@ jobs:
   #   runs-on: ubuntu-latest
   #   steps:
   #     - name: Checkout private repo
-  #       uses: actions/checkout@v5
+  #       uses: actions/checkout@v4
   #       with:
   #         repository: Yvictor/rshioaji
   #         ref: ${{ inputs.version }}
   #         ssh-key: ${{ secrets.PRIVATE_REPO_DEPLOY_KEY }}
   #         path: rshioaji
   #     - name: Checkout rsolace
-  #       uses: actions/checkout@v5
+  #       uses: actions/checkout@v4
   #       with:
   #         repository: Yvictor/rsolace
   #         path: rsolace
@@ -157,12 +157,12 @@ jobs:
   #           cd /workspace/rshioaji/target/release
   #           tar czf /workspace/shioaji-${{ inputs.version }}-Linux-aarch64.tar.gz shioaji
   #     - name: Upload wheel artifacts
-  #       uses: actions/upload-artifact@v7
+  #       uses: actions/upload-artifact@v5
   #       with:
   #         name: wheel-linux-aarch64
   #         path: rshioaji/python/dist/*.whl
   #     - name: Upload binary artifact
-  #       uses: actions/upload-artifact@v7
+  #       uses: actions/upload-artifact@v5
   #       with:
   #         name: binary-linux-aarch64
   #         path: shioaji-*.tar.gz
@@ -172,7 +172,7 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Checkout private repo
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
         with:
           repository: Yvictor/rshioaji
           ref: ${{ inputs.version }}
@@ -180,7 +180,7 @@ jobs:
           path: rshioaji
 
       - name: Checkout rsolace
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
         with:
           repository: Yvictor/rsolace
           ref: v0.3.11
@@ -219,7 +219,7 @@ jobs:
         run: uvx --python 3.12 --from maturin maturin build --release --out dist
 
       - name: Upload wheel artifacts
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v5
         with:
           name: wheel-macos-aarch64
           path: rshioaji/python/dist/*.whl
@@ -233,7 +233,7 @@ jobs:
           uvx --python 3.14t --from maturin maturin build --release --out dist -i python3.14t --no-default-features
 
       - name: Upload free-threaded wheel artifacts
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v5
         with:
           name: wheel-free-threaded-macos-aarch64
           path: rshioaji/python/dist/*.whl
@@ -244,7 +244,7 @@ jobs:
           tar czf ../../../shioaji-${{ inputs.version }}-macOS-aarch64.tar.gz shioaji
 
       - name: Upload binary artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v5
         with:
           name: binary-macos-aarch64
           path: shioaji-*.tar.gz
@@ -254,7 +254,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Checkout private repo
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
         with:
           repository: Yvictor/rshioaji
           ref: ${{ inputs.version }}
@@ -262,7 +262,7 @@ jobs:
           path: rshioaji
 
       - name: Checkout rsolace
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
         with:
           repository: Yvictor/rsolace
           ref: v0.3.11
@@ -314,7 +314,7 @@ jobs:
         run: uvx --python 3.12 --from maturin maturin build --release --out dist
 
       - name: Upload wheel artifacts
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v5
         with:
           name: wheel-windows-x86_64
           path: rshioaji/python/dist/*.whl
@@ -329,7 +329,7 @@ jobs:
       #     if (Test-Path dist) { Remove-Item -Recurse -Force dist }
       #     uvx --python 3.14t --from maturin maturin build --release --out dist -i python3.14t --no-default-features
       # - name: Upload free-threaded wheel artifacts
-      #   uses: actions/upload-artifact@v7
+      #   uses: actions/upload-artifact@v5
       #   with:
       #     name: wheel-free-threaded-windows-x86_64
       #     path: rshioaji/python/dist/*.whl
@@ -340,7 +340,7 @@ jobs:
           Compress-Archive -Path rshioaji/target/release/shioaji.exe -DestinationPath shioaji-${{ inputs.version }}-Windows-x86_64.zip
 
       - name: Upload binary artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v5
         with:
           name: binary-windows-x86_64
           path: shioaji-*.zip
@@ -359,7 +359,7 @@ jobs:
       id-token: write
     steps:
       - name: Download wheel artifacts
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@v5
         with:
           pattern: wheel-*
           merge-multiple: true
@@ -374,10 +374,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout sinotrade/rshioaji
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
 
       - name: Download all artifacts
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@v5
         with:
           path: artifacts/
 
@@ -391,7 +391,7 @@ jobs:
           cp install.ps1 release/
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2.6
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ inputs.version }}
           name: ${{ inputs.title || inputs.version }}

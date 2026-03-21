@@ -18,9 +18,17 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: Yvictor/rshioaji
-          ref: ${{ inputs.ref }}
+          ref: refs/heads/${{ inputs.branch }}
           ssh-key: ${{ secrets.PRIVATE_REPO_DEPLOY_KEY }}
           path: rshioaji
+
+      - name: Verify commit SHA
+        working-directory: rshioaji
+        run: |
+          actual_sha=$(git rev-parse HEAD)
+          if [ "$actual_sha" != "${{ inputs.ref }}" ]; then
+            echo "::warning::Expected SHA ${{ inputs.ref }}, got $actual_sha (branch may have advanced)"
+          fi
 
       - name: Checkout rsolace
         uses: actions/checkout@v5
@@ -77,7 +85,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: Yvictor/rshioaji
-          ref: ${{ inputs.ref }}
+          ref: refs/heads/${{ inputs.branch }}
           ssh-key: ${{ secrets.PRIVATE_REPO_DEPLOY_KEY }}
           path: rshioaji
 
