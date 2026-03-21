@@ -29,7 +29,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout private repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v5
         with:
           repository: Yvictor/rshioaji
           ref: ${{ inputs.version }}
@@ -37,7 +37,7 @@ jobs:
           path: rshioaji
 
       - name: Checkout rsolace
-        uses: actions/checkout@v6
+        uses: actions/checkout@v5
         with:
           repository: Yvictor/rsolace
           ref: v0.3.11
@@ -120,14 +120,14 @@ jobs:
   #   runs-on: ubuntu-latest
   #   steps:
   #     - name: Checkout private repo
-  #       uses: actions/checkout@v6
+  #       uses: actions/checkout@v5
   #       with:
   #         repository: Yvictor/rshioaji
   #         ref: ${{ inputs.version }}
   #         ssh-key: ${{ secrets.PRIVATE_REPO_DEPLOY_KEY }}
   #         path: rshioaji
   #     - name: Checkout rsolace
-  #       uses: actions/checkout@v6
+  #       uses: actions/checkout@v5
   #       with:
   #         repository: Yvictor/rsolace
   #         path: rsolace
@@ -172,7 +172,7 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Checkout private repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v5
         with:
           repository: Yvictor/rshioaji
           ref: ${{ inputs.version }}
@@ -180,7 +180,7 @@ jobs:
           path: rshioaji
 
       - name: Checkout rsolace
-        uses: actions/checkout@v6
+        uses: actions/checkout@v5
         with:
           repository: Yvictor/rsolace
           ref: v0.3.11
@@ -254,7 +254,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Checkout private repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v5
         with:
           repository: Yvictor/rshioaji
           ref: ${{ inputs.version }}
@@ -262,7 +262,7 @@ jobs:
           path: rshioaji
 
       - name: Checkout rsolace
-        uses: actions/checkout@v6
+        uses: actions/checkout@v5
         with:
           repository: Yvictor/rsolace
           ref: v0.3.11
@@ -374,7 +374,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout sinotrade/rshioaji
-        uses: actions/checkout@v6
+        uses: actions/checkout@v5
 
       - name: Download all artifacts
         uses: actions/download-artifact@v8

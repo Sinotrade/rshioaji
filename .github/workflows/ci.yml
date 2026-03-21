@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout private repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v5
         with:
           repository: Yvictor/rshioaji
           ref: ${{ inputs.ref }}
@@ -23,7 +23,7 @@ jobs:
           path: rshioaji
 
       - name: Checkout rsolace
-        uses: actions/checkout@v6
+        uses: actions/checkout@v5
         with:
           repository: Yvictor/rsolace
           ref: v0.3.11
@@ -74,7 +74,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout private repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v5
         with:
           repository: Yvictor/rshioaji
           ref: ${{ inputs.ref }}
@@ -82,7 +82,7 @@ jobs:
           path: rshioaji
 
       - name: Checkout rsolace
-        uses: actions/checkout@v6
+        uses: actions/checkout@v5
         with:
           repository: Yvictor/rsolace
           ref: v0.3.11
