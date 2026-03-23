@@ -11,6 +11,7 @@ Rust implementation of [Shioaji](https://sinotrade.github.io/) — SinoPac's tra
 - **Python Trading API** — Drop-in Rust replacement for the Python Shioaji library, with PyO3 bindings
 - **HTTP Adaptor Server** — RESTful API relay that translates HTTP requests to the Solace messaging backend
 - **Built-in Dashboard** — Real-time web UI for monitoring server health, API usage, SSE streams, accounts, and CA certificates
+- **Custom Apps** — Upload and serve your own web apps alongside the dashboard
 - **OpenAPI Documentation** — Auto-generated interactive API docs at `/docs`
 - **CLI Tool** — Manage server, token pool, and API connectivity from the command line
 
@@ -26,6 +27,14 @@ The dashboard provides real-time monitoring of:
 - **Accounts** — linked trading accounts
 
 Access the dashboard at `http://localhost:8080/` when the server is running.
+
+## Custom Apps
+
+![Custom Apps](https://raw.githubusercontent.com/sinotrade/rshioaji/main/assets/custom-apps.png)
+
+Upload custom web apps from the dashboard's **Custom Apps** card — supports single files or Vite build output folders. Apps are served at `/apps/<name>/` and persist across restarts.
+
+Get started with the demo template: [Sinotrade/shioaji-app-demo](https://github.com/Sinotrade/shioaji-app-demo)
 
 ## Install
 
@@ -122,4 +131,4 @@ shioaji utils api check           # Test API connectivity
 
 - [Shioaji Documentation](https://sinotrade.github.io/)
 - [PyPI Package](https://pypi.org/project/rshioaji/)
-- [CI/CD Pipeline](https://github.com/sinotrade/rshioaji/blob/main/CICD.md)
+- [Custom App Demo Template](https://github.com/Sinotrade/shioaji-app-demo)
