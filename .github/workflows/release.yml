@@ -36,12 +36,13 @@ jobs:
           ssh-key: ${{ secrets.PRIVATE_REPO_DEPLOY_KEY }}
           path: rshioaji
 
-      - name: Checkout rsolace
-        uses: actions/checkout@v5
-        with:
-          repository: Yvictor/rsolace
-          ref: v0.3.11
-          path: rsolace
+      # rsolace is now fetched via git dependency in Cargo.toml (no checkout needed)
+      # - name: Checkout rsolace
+      #   uses: actions/checkout@v5
+      #   with:
+      #     repository: Yvictor/rsolace
+      #     ref: v0.3.12
+      #     path: rsolace
 
       - name: Setup Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
@@ -179,12 +180,13 @@ jobs:
           ssh-key: ${{ secrets.PRIVATE_REPO_DEPLOY_KEY }}
           path: rshioaji
 
-      - name: Checkout rsolace
-        uses: actions/checkout@v5
-        with:
-          repository: Yvictor/rsolace
-          ref: v0.3.11
-          path: rsolace
+      # rsolace is now fetched via git dependency in Cargo.toml (no checkout needed)
+      # - name: Checkout rsolace
+      #   uses: actions/checkout@v5
+      #   with:
+      #     repository: Yvictor/rsolace
+      #     ref: v0.3.12
+      #     path: rsolace
 
       - name: Install pnpm
         uses: pnpm/action-setup@v5
@@ -261,12 +263,13 @@ jobs:
           ssh-key: ${{ secrets.PRIVATE_REPO_DEPLOY_KEY }}
           path: rshioaji
 
-      - name: Checkout rsolace
-        uses: actions/checkout@v5
-        with:
-          repository: Yvictor/rsolace
-          ref: v0.3.11
-          path: rsolace
+      # rsolace is now fetched via git dependency in Cargo.toml (no checkout needed)
+      # - name: Checkout rsolace
+      #   uses: actions/checkout@v5
+      #   with:
+      #     repository: Yvictor/rsolace
+      #     ref: v0.3.12
+      #     path: rsolace
 
       - name: Install pnpm
         uses: pnpm/action-setup@v5
