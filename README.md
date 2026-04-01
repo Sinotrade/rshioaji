@@ -160,11 +160,14 @@ curl -N http://localhost:8080/api/v1/stream/data/tick_stk
 ### CLI
 
 ```bash
-shioaji server start              # Start HTTP server (simulation by default)
-shioaji server start --production # Start in production mode
+shioaji server start              # Start HTTP server (simulation)
+shioaji server start --production # Production mode
 shioaji server check              # Check mode and auth status
-shioaji utils token list          # List cached tokens
-shioaji utils api check           # Test API connectivity
+shioaji auth accounts             # List trading accounts
+shioaji data snapshots --codes 2330,2317
+shioaji order place --code 2330 --action Buy --price 580 --quantity 1
+shioaji portfolio balance
+shioaji tree --all                # Show full command tree
 ```
 
 ## Platform Support
