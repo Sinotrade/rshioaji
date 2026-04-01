@@ -53,7 +53,10 @@ jobs:
       - name: Commit and push
         if: steps.changes.outputs.changed == 'true'
         run: |
+          upstream_msg=$(cd upstream && git log -1 --format='%s' ${{ inputs.ref }})
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git commit -m "chore: sync from Yvictor/rshioaji@${{ inputs.ref }}"
+          git commit -m "sync: ${upstream_msg}
+
+upstream: Yvictor/rshioaji@${{ inputs.ref }}"
           git push
