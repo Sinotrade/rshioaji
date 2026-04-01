@@ -169,6 +169,8 @@ shioaji auth accounts             # List trading accounts
 shioaji data snapshots --codes 2330,2317
 shioaji order place --code 2330 --action Buy --price 580 --quantity 1
 shioaji portfolio balance
+shioaji utils token list          # List cached tokens
+shioaji utils api check           # Test API connectivity
 shioaji tree --all                # Show full command tree
 ```
 
