@@ -7,6 +7,10 @@ on:
         description: 'Git commit SHA to sync from'
         required: true
 
+permissions:
+  contents: write
+  workflows: write
+
 jobs:
   sync:
     runs-on: ubuntu-latest
@@ -33,9 +37,10 @@ jobs:
           cp upstream/sinotrade-workflows/release.yml .github/workflows/release.yml
           cp upstream/sinotrade-workflows/sync.yml .github/workflows/sync.yml
 
-          # Sync install scripts
+          # Sync install scripts and README
           cp upstream/sinotrade-workflows/install.sh install.sh
           cp upstream/sinotrade-workflows/install.ps1 install.ps1
+          cp upstream/sinotrade-workflows/README.md README.md
 
       - name: Check for changes
         id: changes
