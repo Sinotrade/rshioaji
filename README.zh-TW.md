@@ -20,15 +20,7 @@ Shioaji 過去僅支援 Python。rshioaji 將其轉變為**通用交易平台** 
 
 ### 支援語言
 
-| 語言 | 存取方式 | SSE 串流 |
-|------|----------|----------|
-| Python | 原生 PyO3 綁定 | Callbacks |
-| JavaScript/TypeScript | HTTP API | `EventSource` |
-| Go | HTTP API | `bufio.Scanner` |
-| C/C++ | HTTP API | `libcurl` chunked |
-| C# | HTTP API | `HttpClient` SSE |
-| Rust | HTTP API | `reqwest-eventsource` |
-| Java/Kotlin | HTTP API | `okhttp-sse` |
+Python, JavaScript/TypeScript, Go, C/C++, C#, Rust, Java/Kotlin
 
 ## 功能
 

@@ -20,15 +20,7 @@ Shioaji was Python-only. rshioaji transforms it into a **universal trading platf
 
 ### Supported Languages
 
-| Language | Access | SSE Streaming |
-|----------|--------|---------------|
-| Python | Native PyO3 binding | Callbacks |
-| JavaScript/TypeScript | HTTP API | `EventSource` |
-| Go | HTTP API | `bufio.Scanner` |
-| C/C++ | HTTP API | `libcurl` chunked |
-| C# | HTTP API | `HttpClient` SSE |
-| Rust | HTTP API | `reqwest-eventsource` |
-| Java/Kotlin | HTTP API | `okhttp-sse` |
+Python, JavaScript/TypeScript, Go, C/C++, C#, Rust, Java/Kotlin
 
 ## Features
 
