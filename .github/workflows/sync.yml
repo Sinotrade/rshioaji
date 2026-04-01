@@ -56,7 +56,10 @@ jobs:
           upstream_msg=$(cd upstream && git log -1 --format='%s' ${{ inputs.ref }})
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git commit -m "sync: ${upstream_msg}
+          git commit -m "$(cat <<EOF
+          sync: ${upstream_msg}
 
-upstream: Yvictor/rshioaji@${{ inputs.ref }}"
+          upstream: Yvictor/rshioaji@${{ inputs.ref }}
+          EOF
+          )"
           git push
