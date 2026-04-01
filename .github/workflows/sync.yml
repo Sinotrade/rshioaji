@@ -39,7 +39,7 @@ jobs:
           cp upstream/sinotrade-workflows/install.sh install.sh
           cp upstream/sinotrade-workflows/install.ps1 install.ps1
           cp upstream/sinotrade-workflows/README.md README.md
-          cp upstream/sinotrade-workflows/README.en.md README.en.md
+          cp upstream/sinotrade-workflows/README.zh-TW.md README.zh-TW.md
 
       - name: Check for changes
         id: changes
