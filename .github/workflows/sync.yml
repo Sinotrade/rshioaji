@@ -1,0 +1,56 @@
+name: Sync from upstream
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Git commit SHA to sync from'
+        required: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout this repo (sinotrade/rshioaji)
+        uses: actions/checkout@v5
+
+      - name: Checkout private repo (Yvictor/rshioaji)
+        uses: actions/checkout@v5
+        with:
+          repository: Yvictor/rshioaji
+          ref: ${{ inputs.ref }}
+          ssh-key: ${{ secrets.PRIVATE_REPO_DEPLOY_KEY }}
+          path: upstream
+
+      - name: Sync files from upstream
+        run: |
+          # Mirror .claude-plugin/ and skills/ (delete removed files)
+          rsync -av --delete upstream/.claude-plugin/ .claude-plugin/
+          rsync -av --delete upstream/skills/ skills/
+
+          # Sync CI workflows from sinotrade-workflows/ → .github/workflows/
+          cp upstream/sinotrade-workflows/ci.yml .github/workflows/ci.yml
+          cp upstream/sinotrade-workflows/release.yml .github/workflows/release.yml
+          cp upstream/sinotrade-workflows/sync.yml .github/workflows/sync.yml
+
+          # Sync install scripts
+          cp upstream/sinotrade-workflows/install.sh install.sh
+          cp upstream/sinotrade-workflows/install.ps1 install.ps1
+
+      - name: Check for changes
+        id: changes
+        run: |
+          git add -A
+          if git diff --cached --quiet; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit and push
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: sync from Yvictor/rshioaji@${{ inputs.ref }}"
+          git push
