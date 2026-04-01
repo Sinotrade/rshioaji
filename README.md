@@ -1,19 +1,53 @@
 # rshioaji
 
-Rust implementation of [Shioaji](https://sinotrade.github.io/) — SinoPac's trading API for Taiwan financial markets (TWSE/TPEX/TAIFEX).
+Rust implementation of [Shioaji](https://sinotrade.github.io/) — SinoPac's **cross-language, cross-platform** trading API for Taiwan financial markets (TWSE/TPEX/TAIFEX).
 
 [![PyPI](https://img.shields.io/pypi/v/rshioaji)](https://pypi.org/project/rshioaji/)
 
 > **⚠️ Alpha Stage** — This project is under active development and not yet production-ready. APIs may change without notice. Use at your own risk.
 
+## What is rshioaji?
+
+Shioaji was Python-only. rshioaji transforms it into a **universal trading platform** — any programming language can now trade Taiwan markets through the HTTP API server with SSE real-time streaming.
+
+| Access Layer | Who | How |
+|-------------|-----|-----|
+| **Python** | Native binding (PyO3) | `import shioaji` — best performance, sync and async |
+| **HTTP API + SSE** | Any language | REST endpoints + real-time streaming at `localhost:8080` |
+| **CLI** | Terminal / scripts | `shioaji` command for server, trading, data queries |
+
+### Supported Languages
+
+| Language | Access | SSE Streaming |
+|----------|--------|---------------|
+| Python | Native PyO3 binding | Callbacks |
+| JavaScript/TypeScript | HTTP API | `EventSource` |
+| Go | HTTP API | `bufio.Scanner` |
+| C/C++ | HTTP API | `libcurl` chunked |
+| C# | HTTP API | `HttpClient` SSE |
+| Rust | HTTP API | `reqwest-eventsource` |
+| Java/Kotlin | HTTP API | `okhttp-sse` |
+
 ## Features
 
 - **Python Trading API** — Drop-in Rust replacement for the Python Shioaji library, with PyO3 bindings
-- **HTTP Adaptor Server** — RESTful API relay that translates HTTP requests to the Solace messaging backend
+- **HTTP API Server** — RESTful API with SSE streaming, accessible from any language
 - **Built-in Dashboard** — Real-time web UI for monitoring server health, API usage, SSE streams, accounts, and CA certificates
 - **Custom Apps** — Upload and serve your own web apps alongside the dashboard
-- **OpenAPI Documentation** — Auto-generated interactive API docs at `/docs`
+- **OpenAPI Documentation** — Auto-generated interactive API docs at `/docs` — the single source of truth for request/response schemas
 - **CLI Tool** — Manage server, token pool, and API connectivity from the command line
+- **Claude Code Skill** — AI-assisted development with comprehensive trading API documentation
+
+## Claude Code Skill
+
+Install the shioaji skill for AI-assisted trading development:
+
+```bash
+claude plugin marketplace add Sinotrade/rshioaji
+claude plugin install rshioaji
+```
+
+The skill covers all access layers — Python, CLI, HTTP API, SSE streaming, and complete project guides for JS/TS, Go, C/C++, C#, Rust, and Java/Kotlin.
 
 ## Dashboard
 
@@ -41,9 +75,11 @@ Get started with the demo template: [Sinotrade/shioaji-app-demo](https://github.
 ### Python Package
 
 ```bash
-pip install rshioaji
-# or
+# uv (recommended)
 uv add rshioaji
+
+# pip
+pip install rshioaji
 ```
 
 ### CLI Tool
@@ -93,7 +129,7 @@ api.snapshots([api.Contracts.Stocks["2330"]])
 api.kbars(api.Contracts.Stocks["2330"])
 ```
 
-### HTTP Adaptor Server
+### HTTP API (any language)
 
 Start the server to expose Shioaji as a REST API:
 
@@ -103,19 +139,31 @@ shioaji server start
 
 The server provides:
 - **REST API** at `http://localhost:8080/api/v1/`
-- **OpenAPI docs** at `http://localhost:8080/docs`
+- **OpenAPI docs** at `http://localhost:8080/docs` — browse schemas, try endpoints
+- **OpenAPI spec** at `http://localhost:8080/openapi.json` — auto-generate typed clients
 - **Dashboard** at `http://localhost:8080/`
 - **SSE streams** for real-time tick, bidask, and quote data
 
-Full API documentation available at `/docs` when the server is running.
+```bash
+# Example: get market snapshots
+curl -X POST http://localhost:8080/api/v1/data/snapshots \
+  -H "Content-Type: application/json" \
+  -d '{"contracts":[{"security_type":"STK","exchange":"TSE","code":"2330"}]}'
+
+# Example: subscribe and stream real-time ticks (SSE)
+curl -X POST http://localhost:8080/api/v1/stream/subscribe \
+  -H "Content-Type: application/json" \
+  -d '{"security_type":"STK","exchange":"TSE","code":"2330","quote_type":"Tick"}'
+curl -N http://localhost:8080/api/v1/stream/data/tick_stk
+```
 
 ### CLI
 
 ```bash
-shioaji server start              # Start HTTP relay server
-shioaji server check              # Health check
+shioaji server start              # Start HTTP server (simulation by default)
+shioaji server start --production # Start in production mode
+shioaji server check              # Check mode and auth status
 shioaji utils token list          # List cached tokens
-shioaji utils token clean --all   # Clean all tokens (with server logout)
 shioaji utils api check           # Test API connectivity
 ```
 
