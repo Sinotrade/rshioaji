@@ -163,6 +163,8 @@ curl -N http://localhost:8080/api/v1/stream/data/tick_stk
 shioaji server start              # Start HTTP server (simulation)
 shioaji server start --production # Production mode
 shioaji server check              # Check mode and auth status
+shioaji server status             # Show daemon status
+shioaji server stop               # Stop the daemon
 shioaji auth accounts             # List trading accounts
 shioaji data snapshots --codes 2330,2317
 shioaji order place --code 2330 --action Buy --price 580 --quantity 1
