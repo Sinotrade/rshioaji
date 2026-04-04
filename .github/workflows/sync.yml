@@ -34,6 +34,7 @@ jobs:
           cp upstream/sinotrade-workflows/ci.yml .github/workflows/ci.yml
           cp upstream/sinotrade-workflows/release.yml .github/workflows/release.yml
           cp upstream/sinotrade-workflows/sync.yml .github/workflows/sync.yml
+          cp upstream/sinotrade-workflows/mirror-public-issue.yml .github/workflows/mirror-public-issue.yml
 
           # Sync install scripts and README
           cp upstream/sinotrade-workflows/install.sh install.sh
