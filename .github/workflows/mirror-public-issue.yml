@@ -1,0 +1,201 @@
+name: Mirror Public Issue
+
+on:
+  issues:
+    types: [opened]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: "Public issue number to mirror (for manual retrigger)"
+        required: true
+        type: number
+
+# Concurrency: only one mirror job per issue number at a time
+concurrency:
+  group: mirror-issue-${{ github.event.issue.number || inputs.issue_number }}
+  cancel-in-progress: false
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write  # to post acknowledgment comment on public issue
+    env:
+      PRIVATE_REPO: Yvictor/rshioaji
+      GH_TOKEN: ${{ secrets.MIRROR_TOKEN }}
+
+    steps:
+      - name: Validate issue input
+        if: inputs.issue_number
+        env:
+          ISSUE_NUMBER: ${{ inputs.issue_number }}
+        run: |
+          # gh issue view doesn't support isPullRequest as a JSON field.
+          # Use the REST API instead: issues that are PRs have a "pull_request" key.
+          RESULT=$(gh api "repos/${{ github.repository }}/issues/${ISSUE_NUMBER}" 2>&1) \
+            || { echo "::error::Issue #${ISSUE_NUMBER} not found in ${{ github.repository }}"; exit 1; }
+
+          IS_PR=$(echo "${RESULT}" | jq -e '.pull_request // empty' > /dev/null 2>&1 && echo true || echo false)
+          if [ "${IS_PR}" = "true" ]; then
+            echo "::error::#${ISSUE_NUMBER} is a pull request, not an issue. Mirror workflow only accepts issues."
+            exit 1
+          fi
+
+      - name: Resolve issue metadata
+        id: meta
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issueNumber = context.payload.issue?.number || ${{ inputs.issue_number || 0 }};
+            if (!issueNumber) {
+              core.setFailed('No issue number resolved');
+              return;
+            }
+
+            const { data: issue } = await github.rest.issues.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+            });
+
+            core.setOutput('number', issue.number);
+            core.setOutput('title', issue.title);
+            core.setOutput('body', issue.body || '_(no description)_');
+            core.setOutput('url', issue.html_url);
+            core.setOutput('user', issue.user.login);
+            core.setOutput('created_at', issue.created_at);
+            core.setOutput('labels', issue.labels.map(l => l.name).join(', '));
+            core.setOutput('label_names', JSON.stringify(issue.labels.map(l => l.name)));
+
+      - name: Check for existing mirror (idempotency)
+        id: check
+        env:
+          ISSUE_NUMBER: ${{ steps.meta.outputs.number }}
+        run: |
+          MARKER="<!-- mirror:public#${ISSUE_NUMBER} -->"
+          COUNT=$(gh search issues "${MARKER}" --repo "${PRIVATE_REPO}" --json number --jq 'length')
+          echo "existing_count=${COUNT}" >> "$GITHUB_OUTPUT"
+          if [ "${COUNT}" -gt 0 ]; then
+            echo "::notice::Mirror issue already exists for public#${ISSUE_NUMBER}, skipping."
+          fi
+
+      - name: Map labels
+        if: steps.check.outputs.existing_count == '0'
+        id: labels
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const labelMap = {
+              'bug': ['type/bug'],
+              'docs': ['type/docs'],
+              'installation': ['ws/release-distribution', 'risk/adoption'],
+              'compatibility': ['ws/python-compat', 'type/compat', 'risk/adoption'],
+              'question': ['ws/product-dx'],
+              'feature-request': ['type/feature'],
+              'release-regression': ['risk/release-blocker', 'ws/release-distribution'],
+              'area/python': ['ws/python-compat'],
+              'area/server': ['ws/server-platform'],
+              'area/cli': ['ws/server-platform'],
+              'area/dashboard': ['ws/product-dx'],
+            };
+
+            const publicLabels = JSON.parse('${{ steps.meta.outputs.label_names }}');
+            const privateLabels = new Set(['source/public']);
+
+            let matched = false;
+            for (const label of publicLabels) {
+              if (labelMap[label]) {
+                for (const mapped of labelMap[label]) {
+                  privateLabels.add(mapped);
+                }
+                matched = true;
+              }
+            }
+
+            // Fallback if no mapping matched
+            if (!matched) {
+              privateLabels.add('type/bug');
+              privateLabels.add('risk/adoption');
+              privateLabels.add('owner/shared');
+            }
+
+            const result = [...privateLabels];
+            core.setOutput('private_labels', JSON.stringify(result));
+            core.info(`Mapped labels: ${result.join(', ')}`);
+
+      - name: Validate private labels exist
+        id: validate_labels
+        if: steps.check.outputs.existing_count == '0'
+        env:
+          PRIVATE_LABELS: ${{ steps.labels.outputs.private_labels }}
+          PRIVATE_REPO: ${{ env.PRIVATE_REPO }}
+        run: |
+          MISSING=""
+          ALL_LABELS=$(gh label list --repo "${PRIVATE_REPO}" --json name --jq '.[].name' --limit 200)
+          while IFS= read -r label; do
+            if ! echo "${ALL_LABELS}" | grep -qxF "${label}"; then
+              MISSING="${MISSING}  - ${label}"$'\n'
+            fi
+          done < <(echo "${PRIVATE_LABELS}" | jq -r '.[]')
+          if [ -n "${MISSING}" ]; then
+            echo "::error::Missing labels in ${PRIVATE_REPO}:"$'\n'"${MISSING}Create them before enabling the mirror."
+            exit 1
+          fi
+
+      - name: Create private mirror issue
+        if: steps.check.outputs.existing_count == '0'
+        id: create
+        env:
+          ISSUE_NUMBER: ${{ steps.meta.outputs.number }}
+          ISSUE_TITLE: ${{ steps.meta.outputs.title }}
+          ISSUE_BODY: ${{ steps.meta.outputs.body }}
+          ISSUE_URL: ${{ steps.meta.outputs.url }}
+          ISSUE_USER: ${{ steps.meta.outputs.user }}
+          ISSUE_CREATED: ${{ steps.meta.outputs.created_at }}
+          ISSUE_LABELS: ${{ steps.meta.outputs.labels }}
+          PRIVATE_LABELS: ${{ steps.labels.outputs.private_labels }}
+        run: |
+          MIRROR_BODY="$(cat <<ENDOFBODY
+          <!-- mirror:public#${ISSUE_NUMBER} -->
+          **Source:** Sinotrade/rshioaji#${ISSUE_NUMBER}
+          **Public URL:** ${ISSUE_URL}
+          **Reporter:** @${ISSUE_USER}
+          **Intake labels:** ${ISSUE_LABELS}
+          **Reported at:** ${ISSUE_CREATED}
+
+          ### Original report
+
+          > $(echo "${ISSUE_BODY}" | sed 's/^/> /' | sed '1s/^> > /> /')
+
+          ### Internal triage notes
+          - **Area:**
+          - **Workstream:**
+          - **Risk:**
+          - **Owner:**
+          ENDOFBODY
+          )"
+
+          # Build comma-separated label list (handles labels with spaces)
+          LABEL_CSV=$(echo "${PRIVATE_LABELS}" | jq -r 'join(",")')
+
+          PRIVATE_URL=$(gh issue create \
+            --repo "${PRIVATE_REPO}" \
+            --title "[public] ${ISSUE_TITLE}" \
+            --body "${MIRROR_BODY}" \
+            --label "${LABEL_CSV}")
+
+          echo "private_url=${PRIVATE_URL}" >> "$GITHUB_OUTPUT"
+          echo "::notice::Created mirror issue: ${PRIVATE_URL}"
+
+      - name: Post acknowledgment on public issue
+        if: steps.check.outputs.existing_count == '0' && steps.create.outcome == 'success'
+        env:
+          ISSUE_NUMBER: ${{ steps.meta.outputs.number }}
+        run: |
+          gh issue comment "${ISSUE_NUMBER}" \
+            --repo "${{ github.repository }}" \
+            --body "Thanks for reporting this issue. It has been picked up for internal triage and will be reviewed by the maintainers." \
+            --edit-last false 2>/dev/null || \
+          gh issue comment "${ISSUE_NUMBER}" \
+            --repo "${{ github.repository }}" \
+            --body "Thanks for reporting this issue. It has been picked up for internal triage and will be reviewed by the maintainers."
