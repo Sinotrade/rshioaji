@@ -72,7 +72,7 @@ jobs:
         env:
           ISSUE_NUMBER: ${{ steps.meta.outputs.number }}
         run: |
-          MARKER="<!-- mirror:public#${ISSUE_NUMBER} -->"
+          MARKER="[mirror:public#${ISSUE_NUMBER}]"
           COUNT=$(gh search issues "${MARKER}" --repo "${PRIVATE_REPO}" --json number --jq 'length')
           echo "existing_count=${COUNT}" >> "$GITHUB_OUTPUT"
           if [ "${COUNT}" -gt 0 ]; then
@@ -112,10 +112,8 @@ jobs:
               }
             }
 
-            // Fallback if no mapping matched
+            // Fallback: no type/risk assumption — triage assigns these within SLA
             if (!matched) {
-              privateLabels.add('type/bug');
-              privateLabels.add('risk/adoption');
               privateLabels.add('owner/shared');
             }
 
@@ -156,7 +154,7 @@ jobs:
           PRIVATE_LABELS: ${{ steps.labels.outputs.private_labels }}
         run: |
           MIRROR_BODY="$(cat <<ENDOFBODY
-          <!-- mirror:public#${ISSUE_NUMBER} -->
+          [mirror:public#${ISSUE_NUMBER}]
           **Source:** Sinotrade/rshioaji#${ISSUE_NUMBER}
           **Public URL:** ${ISSUE_URL}
           **Reporter:** @${ISSUE_USER}
