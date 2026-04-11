@@ -72,11 +72,46 @@ jobs:
         env:
           ISSUE_NUMBER: ${{ steps.meta.outputs.number }}
         run: |
-          MARKER="[mirror:public#${ISSUE_NUMBER}]"
-          COUNT=$(gh search issues "${MARKER}" --repo "${PRIVATE_REPO}" --json number --jq 'length')
+          set -euo pipefail
+
+          # gh search issues tokenizes [, ], :, # as word boundaries, so it
+          # cannot reliably look up [mirror:public#N]. List labeled mirrors
+          # only and exact-substring match in jq instead.
+          LEGACY_MARKER="<!-- mirror:public#${ISSUE_NUMBER} -->"
+          CURRENT_MARKER="[mirror:public#${ISSUE_NUMBER}]"
+
+          MATCHES_JSON="$(
+            gh issue list \
+              --repo "${PRIVATE_REPO}" \
+              --label "source/public" \
+              --state all \
+              --limit 500 \
+              --json number,url,body \
+            | jq -c \
+                --arg legacy "$LEGACY_MARKER" \
+                --arg current "$CURRENT_MARKER" '
+                  map(
+                    select(
+                      (.body // "") as $body
+                      | ($body | contains($legacy))
+                        or ($body | contains($current))
+                    )
+                  )
+                '
+          )"
+
+          COUNT="$(echo "${MATCHES_JSON}" | jq -r 'length')"
           echo "existing_count=${COUNT}" >> "$GITHUB_OUTPUT"
+
           if [ "${COUNT}" -gt 0 ]; then
-            echo "::notice::Mirror issue already exists for public#${ISSUE_NUMBER}, skipping."
+            FIRST_NUMBER="$(echo "${MATCHES_JSON}" | jq -r '.[0].number')"
+            FIRST_URL="$(echo "${MATCHES_JSON}" | jq -r '.[0].url')"
+            echo "existing_number=${FIRST_NUMBER}" >> "$GITHUB_OUTPUT"
+            echo "existing_url=${FIRST_URL}" >> "$GITHUB_OUTPUT"
+            echo "::notice::Mirror issue already exists for public#${ISSUE_NUMBER}: ${FIRST_URL}"
+            if [ "${COUNT}" -gt 1 ]; then
+              echo "::warning::Found ${COUNT} mirror issues for public#${ISSUE_NUMBER}; historical duplicates need cleanup."
+            fi
           fi
 
       - name: Map labels
