@@ -179,7 +179,7 @@ Use event callback to monitor connection:
 使用事件回調監控連線：
 
 ```python
-@api.quote.on_event
+@api.on_event
 def event_callback(resp_code: int, event_code: int, info: str, event: str):
     print(f"Event: {event_code} - {event}")
 

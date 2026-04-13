@@ -561,8 +561,8 @@ api.clear_order_callback()
 ### set_event_callback 設定事件回報
 
 ```python
-def event_cb(event):
-    print(f"Event: {event}")
+def event_cb(resp_code: int, event_code: int, info: str, event: str):
+    print(f"Event: {event_code} - {event}")
 
 api.set_event_callback(event_cb)
 ```
@@ -587,8 +587,8 @@ async def order_cb(stat, msg):
 
 api.set_order_callback(order_cb)
 
-async def event_cb(event):
-    print(f"Event: {event}")
+async def event_cb(resp_code: int, event_code: int, info: str, event: str):
+    print(f"Event: {event_code} - {event}")
 
 api.set_event_callback(event_cb)
 ```
@@ -601,8 +601,8 @@ def order_cb(stat, msg):
     print(f"State: {stat}, Message: {msg}")
 
 @api.on_event
-def event_cb(event):
-    print(f"Event: {event}")
+def event_cb(resp_code: int, event_code: int, info: str, event: str):
+    print(f"Event: {event_code} - {event}")
 ```
 
 ### OrderState Types 回報狀態類型
