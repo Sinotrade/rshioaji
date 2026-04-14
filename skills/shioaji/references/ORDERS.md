@@ -296,43 +296,94 @@ trade = api.place_order(contract, order)
 
 ## Combo Orders 組合單
 
-Combo orders allow trading multi-leg option strategies (spreads, straddles, strangles).
-組合單可交易多腳選擇權策略（價差、跨式、勒式等）。
+Combo orders allow trading multi-leg strategies: calendar spreads, option spreads, straddles, strangles.
+組合單可交易多腳策略（期貨日曆價差、選擇權價差、跨式、勒式等）。
 
-### Create Combo Contract 建立組合合約
+**Exactly 2 legs are required.** The client raises `ShioajiValueError` if the
+leg count is wrong (matches the sw backend hard requirement at
+`swrelaystation/api/v1/endpoints/order/place_comboorder.py:67-68`).
+
+### Create Combo Contract — field-by-field 建立組合合約
 
 ```python
-from shioaji.contracts import ComboContract, ComboBase
+import shioaji as sj
 
-# Bull Call Spread 買權多頭價差
-combo_contract = ComboContract(
+# Futures calendar spread — buy near-month, sell next-month
+combo_contract = sj.ComboContract(
     legs=[
-        ComboBase(
-            action=sj.constant.Action.Buy,
-            contract=api.Contracts.Options["TXO202401C18000"],
+        sj.ComboBase(
+            action=sj.Action.Buy,
+            security_type=sj.SecurityType.Future,
+            exchange=sj.Exchange.TAIFEX,
+            code="TXFG5",
+            symbol="TXFG5",
+            category="TXF",
+            delivery_month="202607",
         ),
-        ComboBase(
-            action=sj.constant.Action.Sell,
-            contract=api.Contracts.Options["TXO202401C18500"],
+        sj.ComboBase(
+            action=sj.Action.Sell,
+            security_type=sj.SecurityType.Future,
+            exchange=sj.Exchange.TAIFEX,
+            code="TXFH5",
+            symbol="TXFH5",
+            category="TXF",
+            delivery_month="202608",
         ),
     ]
 )
 ```
 
+### Create Combo Contract — from richer contract objects (compat helper)
+
+Canonical shioaji users can pass a full `Contract` / `Future` / `Option` /
+`Stock` / `Index` and let rshioaji extract the relevant fields:
+
+```python
+r1 = api.Contracts.Futures["TXFR1"]   # near-month alias
+r2 = api.Contracts.Futures["TXFR2"]   # next-month alias
+
+combo_contract = sj.ComboContract(legs=[
+    sj.ComboBase.from_contract(r1, action=sj.Action.Buy),
+    sj.ComboBase.from_contract(r2, action=sj.Action.Sell),
+])
+```
+
+`from_contract` copies `security_type/exchange/code/symbol/category/
+delivery_month/strike_price/option_right/target_code`. For bare
+`BaseContract` instances (only 4 fields) use the field-by-field constructor.
+
 ### Place Combo Order 下組合單
 
 ```python
-order = api.FuturesOrder(
-    price=50,  # Net price 淨價
+# Canonical shape: ComboOrder defaults action=Sell (see note below)
+order = sj.ComboOrder(
+    price=50,   # Net price 淨價
     quantity=1,
-    price_type=sj.constant.FuturesPriceType.LMT,
-    order_type=sj.constant.OrderType.ROD,
-    octype=sj.constant.FuturesOCType.Auto,
+    price_type=sj.FuturesPriceType.LMT,
+    order_type=sj.OrderType.ROD,
+    octype=sj.FuturesOCType.Auto,
     account=api.futopt_account,
 )
 
 trade = api.place_comboorder(combo_contract, order)
 ```
+
+`place_comboorder` also accepts a plain `FuturesOrder` for backcompat. In
+that case you must pass `action` explicitly.
+
+#### Note on combo-level `action`
+
+`ComboOrder.action` defaults to `Sell` to match canonical `shioaji.ComboOrder`
+(`shioaji/order.py:105-128`). **Per-leg `ComboBase.action` is what the
+exchange reads for combo direction** (mapped to STS `ord_bs` and `c_buysell`).
+The order-level `action` reaches the wire as `trade_type` (see
+`swrelaystation/backend/sts/protocol/futureoption/handler.py:219` and the
+binary struct at `tr.py:5-44`), but its semantic effect on TAIFEX matching
+for combo orders is empirically unverified — the sw author's comment
+`# trade_type如果sell會不會有影響` ("does Sell have any effect?") reflects
+this open question. The canonical default of `Sell` is used here to
+minimise divergence from `shioaji`; if you need a specific value, pass
+`action=...` explicitly.
 
 #### HTTP: Place Combo Order
 
@@ -343,11 +394,12 @@ curl -X POST http://localhost:8080/api/v1/order/place_comboorder \
   -d '{
     "combo_contract": {
       "legs": [
-        {"action": "Buy", "code": "TXO202401C18000", "security_type": "OPT", "exchange": "TAIFEX"},
-        {"action": "Sell", "code": "TXO202401C18500", "security_type": "OPT", "exchange": "TAIFEX"}
+        {"action": "Buy",  "security_type": "FUT", "exchange": "TAIFEX", "code": "TXFG5", "symbol": "TXFG5", "category": "TXF", "delivery_month": "202607"},
+        {"action": "Sell", "security_type": "FUT", "exchange": "TAIFEX", "code": "TXFH5", "symbol": "TXFH5", "category": "TXF", "delivery_month": "202608"}
       ]
     },
     "order": {
+      "action": "Sell",
       "price": 50,
       "quantity": 1,
       "price_type": "LMT",
@@ -356,6 +408,12 @@ curl -X POST http://localhost:8080/api/v1/order/place_comboorder \
     }
   }'
 ```
+
+Note on payload keys: the rshioaji Salvo HTTP server uses `combo_contract`
+(see `src/server/http/order.rs` `PlaceComboOrderRequest`). Internally,
+the Rust core payload sent to the sw relay uses `combocontract` (see
+`src/api/api_v1/order/combo_types.rs` `PlaceComboOrderIn`). Don't confuse
+the two — when POSTing to rshioaji's HTTP server, use `combo_contract`.
 
 ### Cancel Combo Order 取消組合單
 
