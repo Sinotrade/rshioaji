@@ -72,6 +72,10 @@ jobs:
         working-directory: rshioaji
         run: cargo fmt --check
 
+      - name: Check formatting (python crate)
+        working-directory: rshioaji/python
+        run: cargo fmt --check
+
       - name: Clippy
         working-directory: rshioaji
         run: cargo clippy --all-targets -- -D warnings
