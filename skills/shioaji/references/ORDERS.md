@@ -355,7 +355,10 @@ delivery_month/strike_price/option_right/target_code`. For bare
 ### Place Combo Order 下組合單
 
 ```python
-# Canonical shape: ComboOrder defaults action=Sell (see note below)
+# Canonical shape: ComboOrder defaults action=Sell (see note below).
+# Legs built via ComboBase.from_contract(future_or_option) carry full
+# contract info — rshioaji auto-fills `combo_type` for you, so you can
+# omit it.
 order = sj.ComboOrder(
     price=50,   # Net price 淨價
     quantity=1,
@@ -368,8 +371,42 @@ order = sj.ComboOrder(
 trade = api.place_comboorder(combo_contract, order)
 ```
 
-`place_comboorder` also accepts a plain `FuturesOrder` for backcompat. In
-that case you must pass `action` explicitly.
+`place_comboorder` also accepts a plain `FuturesOrder` for backcompat —
+the same auto-fill path runs when the legs are full contracts.
+
+#### `combo_type` — when to fill it yourself 何時需要自己帶入
+
+- **Full contracts** (`ComboBase.from_contract(future_or_option)` or
+  manually populating `category` / `delivery_month` / `strike_price` /
+  `option_right`): rshioaji auto-fills `combo_type` from the leg shape.
+  You can omit the argument.
+- **Bare `BaseContract` legs** (only `security_type` / `exchange` /
+  `code`): rshioaji can't infer the strategy. **You must pass
+  `combo_type=sj.ComboType.<variant>` yourself**, otherwise
+  `place_comboorder` raises `ShioajiValueError`.
+- **`WeeklyTimeSpread`**: always pass it explicitly — the auto-fill path
+  can't tell it apart from `TimeSpread` (they share `f_mttype` "2").
+- **Explicit always wins**: passing `combo_type=...` overrides the
+  auto-fill regardless of leg shape.
+
+| `sj.ComboType.*`     | f_mttype | Strategy                         |
+| -------------------- | :------: | -------------------------------- |
+| `PriceSpread`        | `1`      | 價格價差                          |
+| `TimeSpread`         | `2`      | 時間價差 (跨月價差)                 |
+| `Straddle`           | `3`      | 跨式                             |
+| `Strangle`           | `4`      | 勒式                             |
+| `ConversionReversal` | `5`      | 轉換 / 逆轉組合                    |
+| `WeeklyTimeSpread`   | `2`      | 週選跨月價差                       |
+
+```python
+order = sj.ComboOrder(
+    price=50,
+    quantity=1,
+    price_type=sj.FuturesPriceType.LMT,
+    order_type=sj.OrderType.ROD,
+    combo_type=sj.ComboType.WeeklyTimeSpread,
+)
+```
 
 #### Note on combo-level `action`
 
@@ -404,10 +441,18 @@ curl -X POST http://localhost:8080/api/v1/order/place_comboorder \
       "quantity": 1,
       "price_type": "LMT",
       "order_type": "ROD",
-      "octype": "Auto"
+      "octype": "Auto",
+      "combo_type": "Straddle"
     }
   }'
 ```
+
+`combo_type` is optional on the JSON body when each leg includes the
+full contract fields (`category`, `delivery_month`, and for options
+`strike_price` / `option_right`); rshioaji auto-fills it on the server
+side. Pass it explicitly when the legs are bare codes, or when you need
+`WeeklyTimeSpread`. Accepted values: `PriceSpread`, `TimeSpread`,
+`Straddle`, `Strangle`, `ConversionReversal`, `WeeklyTimeSpread`.
 
 Note on payload keys: the rshioaji Salvo HTTP server uses `combo_contract`
 (see `src/server/http/order.rs` `PlaceComboOrderRequest`). Internally,
