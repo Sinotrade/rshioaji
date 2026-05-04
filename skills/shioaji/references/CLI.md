@@ -45,8 +45,9 @@
     - [utils api check](#utils-api-check)
 12. [tree -- Show Command Tree / 顯示指令樹](#tree----show-command-tree--顯示指令樹)
 13. [completions -- Shell Completions / Shell 自動完成](#completions----shell-completions--shell-自動完成)
-14. [Daemon Architecture / 背景服務架構](#daemon-architecture--背景服務架構)
-15. [UDS Support / Unix Domain Socket 支援](#uds-support--unix-domain-socket-支援)
+14. [version -- Print Version / 顯示版本](#version----print-version--顯示版本)
+15. [Daemon Architecture / 背景服務架構](#daemon-architecture--背景服務架構)
+16. [UDS Support / Unix Domain Socket 支援](#uds-support--unix-domain-socket-支援)
 
 ---
 
@@ -167,7 +168,8 @@ shioaji
 │   └── api
 │       └── check   [--production]
 ├── tree            [--params] [--all]
-└── completions     <SHELL>
+├── completions     <SHELL>
+└── version
 ```
 
 ---
@@ -667,6 +669,40 @@ shioaji completions powershell
 | Bash | `shioaji completions bash > /etc/bash_completion.d/shioaji` |
 | Fish | `shioaji completions fish > ~/.config/fish/completions/shioaji.fish` |
 | PowerShell | `shioaji completions powershell > _shioaji.ps1` |
+
+---
+
+## version -- Print Version / 顯示版本
+
+Print the installed CLI version. Available in two forms:
+
+### `--version` flag (clap built-in)
+
+```bash
+shioaji --version
+shioaji -V
+# → shioaji 1.5.9
+```
+
+### `version` subcommand (structured output)
+
+Goes through the global `--format` mechanism (default `toon`), so it can
+be parsed in scripts:
+
+```bash
+shioaji version
+# → name: shioaji
+#   version: "1.5.9"
+
+shioaji version --format json
+# → {"name":"shioaji","version":"1.5.9"}
+
+shioaji version --format human
+# → name: shioaji
+#   version: "1.5.9"
+```
+
+Use the flag for a one-liner, the subcommand when you need machine-readable output (e.g. CI pipelines that pin a minimum CLI version).
 
 ---
 
