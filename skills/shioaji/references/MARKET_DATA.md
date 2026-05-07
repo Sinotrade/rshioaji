@@ -227,7 +227,12 @@ Get daily market quotes for all stocks.
 ### Python
 
 ```python
-daily = api.daily_quotes(date="2023-01-16")
+import datetime
+
+daily = api.daily_quotes(date=datetime.date(2023, 1, 16))
+# `date=` accepts datetime.date or datetime.datetime (date portion).
+# Strings are NOT accepted at the Python boundary; convert with
+# datetime.date.fromisoformat("2023-01-16") if you have a string.
 ```
 
 ### HTTP: Get Daily Quotes
