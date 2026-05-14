@@ -319,9 +319,13 @@ Response (200):
 
 The server records the subscription in an in-memory registry; the daily client swap replays it automatically, so callers only need to subscribe once per server boot per account.
 
+**Simulation:** the sw relay's `/auth/subscribe_trade` rejects simulation tokens (paper order events are delivered through a separate path). The server short-circuits this call client-side and returns a no-op success (`200`); nothing is added to the replay registry. Calling it is harmless but never required in simulation.
+
 #### POST `/api/v1/auth/unsubscribe_trade`
 
 Inverse of `subscribe_trade`. Removes the account from the registry only after the relay confirms unsubscribe. Same request shape; response has `"subscribe_trade": false`.
+
+**Simulation:** returns `400 Bad Request` with a `ValueError`-style detail — simulation has no relay subscription to cancel. Don't call this in simulation.
 
 ### Data Endpoints
 

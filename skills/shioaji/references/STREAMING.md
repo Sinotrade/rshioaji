@@ -389,7 +389,9 @@ curl -N http://localhost:8080/api/v1/stream/data/order_event
 
 Trade subscriptions survive the daily client swap via an internal registry — call `subscribe_trade` once per account per server boot. Use `POST /api/v1/auth/unsubscribe_trade` (same body) to stop receiving events for an account.
 
-訂閱委託回報需要在打開 `/stream/data/order_event` SSE 之前**先呼叫**一次 `/auth/subscribe_trade`（每帳號一次）；沒有訂閱的話正式環境只會收到 heartbeat。每日換 client 時系統會自動 replay 訂閱表，所以一個 server 開機後對每個帳號訂閱一次即可。
+In **simulation**, `subscribe_trade` is a client-side no-op success and `unsubscribe_trade` returns `400` — paper order events flow through a separate path and don't use the relay subscription registry. You don't need to call either in simulation.
+
+訂閱委託回報需要在打開 `/stream/data/order_event` SSE 之前**先呼叫**一次 `/auth/subscribe_trade`（每帳號一次）；沒有訂閱的話正式環境只會收到 heartbeat。每日換 client 時系統會自動 replay 訂閱表，所以一個 server 開機後對每個帳號訂閱一次即可。**Simulation 模式下不需要呼叫**：`subscribe_trade` 會直接 no-op 成功，`unsubscribe_trade` 會回 400，因為 paper 委託事件走的是另一條路徑。
 
 ### SSE Event Format SSE 事件格式
 
