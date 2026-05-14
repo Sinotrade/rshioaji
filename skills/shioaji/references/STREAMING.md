@@ -360,22 +360,36 @@ rshioaji HTTP 伺服器透過 Server-Sent Events (SSE) 提供即時資料串流�
 
 ### SSE Flow SSE 使用流程
 
-1. **Subscribe** to market data first (POST) 先訂閱行情
+Market data and trade events use the same explicit-subscribe pattern:
+
+1. **Subscribe** to each resource you want to receive (POST) 先訂閱每個要接收的資源
 2. **Connect** to SSE endpoint (GET) 連接 SSE 端點
 3. **Receive** events as JSON in `data:` fields 接收 JSON 格式的事件
 
 ```bash
-# Step 1: Subscribe 訂閱
+# Market data: subscribe per contract before opening tick/bidask/quote streams
 curl -X POST http://localhost:8080/api/v1/stream/subscribe \
   -H "Content-Type: application/json" \
   -d '{"security_type":"STK","exchange":"TSE","code":"2330","quote_type":"Tick"}'
 
-# Step 2: Connect to SSE (all channels) 連接全部頻道
+# Trade events: subscribe per account before opening order_event stream.
+# REQUIRED for /stream/data/order_event in production — without it the SSE
+# stream only emits heartbeats. Mirrors api.subscribe_trade(account) in Python.
+curl -X POST http://localhost:8080/api/v1/auth/subscribe_trade \
+  -H "Content-Type: application/json" \
+  -d '{"broker_id":"9A95","account_id":"1234567","account_type":"S"}'
+
+# Connect to SSE (all channels) 連接全部頻道
 curl -N http://localhost:8080/api/v1/stream/data
 
-# Or connect to specific channel 或連接特定頻道
+# Or connect to a specific channel 或連接特定頻道
 curl -N http://localhost:8080/api/v1/stream/data/tick_stk
+curl -N http://localhost:8080/api/v1/stream/data/order_event
 ```
+
+Trade subscriptions survive the daily client swap via an internal registry — call `subscribe_trade` once per account per server boot. Use `POST /api/v1/auth/unsubscribe_trade` (same body) to stop receiving events for an account.
+
+訂閱委託回報需要在打開 `/stream/data/order_event` SSE 之前**先呼叫**一次 `/auth/subscribe_trade`（每帳號一次）；沒有訂閱的話正式環境只會收到 heartbeat。每日換 client 時系統會自動 replay 訂閱表，所以一個 server 開機後對每個帳號訂閱一次即可。
 
 ### SSE Event Format SSE 事件格式
 

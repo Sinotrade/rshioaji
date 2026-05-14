@@ -146,6 +146,8 @@ All paths are prefixed with `/api/v1/` unless otherwise noted.
 | GET | `/api/v1/auth/usage` | Yes | Get API usage statistics |
 | GET | `/api/v1/auth/accounts` | Yes | List all trading accounts |
 | GET | `/api/v1/auth/ca_expiretime?person_id=<PID>` | Yes | Get CA certificate expiry time |
+| POST | `/api/v1/auth/subscribe_trade` | Yes | Subscribe per-account trade/deal events (required before `order_event` SSE) |
+| POST | `/api/v1/auth/unsubscribe_trade` | Yes | Unsubscribe per-account trade/deal events |
 
 ### Data / 行情資料
 
@@ -287,6 +289,39 @@ Get API usage statistics (connections, data transfer, limits).
 #### GET `/api/v1/auth/ca_expiretime?person_id=<PERSON_ID>`
 
 Get CA certificate expiry time for a person. The `person_id` query parameter is required.
+
+#### POST `/api/v1/auth/subscribe_trade`
+
+Subscribe to per-account trade/deal events on the Solace relay's P2P topic. **Required** before consuming `/api/v1/stream/data/order_event` in production — without it the SSE stream only emits heartbeats. Mirrors `POST /api/v1/stream/subscribe` for market data: explicit per-resource opt-in.
+
+Request:
+
+```json
+{
+  "broker_id": "9A95",
+  "account_id": "1234567",
+  "account_type": "S"
+}
+```
+
+- `account_type`: `"S"` (stock) or `"F"` (futures/options).
+- Omit `broker_id`/`account_id` to subscribe the default account of `account_type`.
+
+Response (200):
+
+```json
+{
+  "account": { "broker_id": "9A95", "account_id": "1234567", "...": "..." },
+  "subscribe_trade": true,
+  "ts": 1747200000
+}
+```
+
+The server records the subscription in an in-memory registry; the daily client swap replays it automatically, so callers only need to subscribe once per server boot per account.
+
+#### POST `/api/v1/auth/unsubscribe_trade`
+
+Inverse of `subscribe_trade`. Removes the account from the registry only after the relay confirms unsubscribe. Same request shape; response has `"subscribe_trade": false`.
 
 ### Data Endpoints
 

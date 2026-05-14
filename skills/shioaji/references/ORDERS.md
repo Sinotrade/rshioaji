@@ -765,8 +765,11 @@ Order events are available through SSE streaming. See [STREAMING.md](STREAMING.m
 
 ## Subscribe/Unsubscribe Trade 訂閱/取消訂閱交易回報
 
-Subscribe to trade events for a specific account. This enables real-time order/deal notifications.
-訂閱特定帳戶的交易事件，啟用即時委託/成交通知。
+Subscribe to trade events for a specific account. **Required** before consuming the order_event SSE stream in production — without it the relay does not forward FORDER/FDEAL/SORDER/SDEAL to the client. Same explicit-subscribe pattern as market-data subscription (#237).
+
+訂閱特定帳戶的交易事件，啟用即時委託/成交通知。正式環境下消費 `/stream/data/order_event` SSE 之前**必須**呼叫一次（每帳號一次），否則 relay 不會推送回報；pattern 與訂閱報價一致。
+
+### Python
 
 ```python
 # Subscribe 訂閱
@@ -778,15 +781,30 @@ result = api.unsubscribe_trade(api.stock_account)
 print(f"Unsubscribed: {result}")
 ```
 
-### Async 非同步
+#### Async 非同步
 
 ```python
 result = await api.subscribe_trade(api.stock_account)
 result = await api.unsubscribe_trade(api.stock_account)
 ```
 
-**Note 注意:** `subscribe_trade` / `unsubscribe_trade` are Python-only methods. There is no HTTP endpoint for trade subscription.
-`subscribe_trade` / `unsubscribe_trade` 僅限 Python 使用，沒有對應的 HTTP 端點。
+### HTTP (rshioaji server)
+
+```bash
+# Subscribe — required before opening /stream/data/order_event
+curl -X POST http://localhost:8080/api/v1/auth/subscribe_trade \
+  -H "Content-Type: application/json" \
+  -d '{"broker_id":"9A95","account_id":"1234567","account_type":"S"}'
+
+# Unsubscribe
+curl -X POST http://localhost:8080/api/v1/auth/unsubscribe_trade \
+  -H "Content-Type: application/json" \
+  -d '{"broker_id":"9A95","account_id":"1234567","account_type":"S"}'
+```
+
+Body shape: `{broker_id, account_id, account_type}` (`S` for stock, `F` for futures/options). Omit `broker_id`/`account_id` to subscribe the default account of `account_type`.
+
+Subscriptions survive the daily client swap via an in-memory registry, so callers only need to subscribe once per server boot per account. See [STREAMING.md](STREAMING.md) and [HTTP_API.md](HTTP_API.md#post-apiv1authsubscribe_trade) for full SSE/endpoint reference.
 
 ---
 
