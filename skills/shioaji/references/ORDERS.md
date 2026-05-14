@@ -62,6 +62,11 @@ trade = api.place_order(contract, order)
 
 #### HTTP: Place Stock Order
 
+Omit `account` to use the default signed stock account, or supply
+`{broker_id, account_id}` to target a specific one. The server fills
+in the remaining account fields from the login session (1.5.12+,
+#234).
+
 ```bash
 # POST /api/v1/order/place_order
 curl -X POST http://localhost:8080/api/v1/order/place_order \
@@ -75,7 +80,8 @@ curl -X POST http://localhost:8080/api/v1/order/place_order \
       "price_type": "LMT",
       "order_type": "ROD",
       "order_lot": "Common",
-      "order_cond": "Cash"
+      "order_cond": "Cash",
+      "account": {"broker_id": "9A95", "account_id": "1234567"}
     }
   }'
 ```
@@ -212,6 +218,8 @@ trade = api.place_order(contract, order)
 
 #### HTTP: Place Futures Order
 
+Same partial-account selector applies: `{"broker_id":"F002", "account_id":"1234567"}` targets a specific futures account; omit for default.
+
 ```bash
 # POST /api/v1/order/place_order
 curl -X POST http://localhost:8080/api/v1/order/place_order \
@@ -224,7 +232,8 @@ curl -X POST http://localhost:8080/api/v1/order/place_order \
       "action": "Buy",
       "price_type": "LMT",
       "order_type": "ROD",
-      "octype": "Auto"
+      "octype": "Auto",
+      "account": {"broker_id": "F002", "account_id": "1234567"}
     }
   }'
 ```

@@ -440,6 +440,26 @@ Futures order:
 }
 ```
 
+**Selecting a specific account.** Omit `account` to use the default
+(first signed account of the matching type). To target a specific
+account, supply just `broker_id` + `account_id` — the server resolves
+the remaining fields (`person_id`, `signed`, `username`) from the
+login session. Available since 1.5.12 (#234).
+
+```json
+{
+  "contract": { "security_type": "STK", "exchange": "TSE", "code": "2330" },
+  "stock_order": {
+    "action": "Buy",
+    "price": 600.0,
+    "quantity": 1,
+    "price_type": "LMT",
+    "order_type": "ROD",
+    "account": { "broker_id": "9A95", "account_id": "1234567" }
+  }
+}
+```
+
 #### POST `/api/v1/order/cancel_order`
 
 ```json
@@ -468,12 +488,17 @@ List all trades (triggers status update before listing). Requires `AccountReques
 
 #### POST `/api/v1/order/place_comboorder`
 
-Place a combo (spread) order.
+Place a combo (spread) order. Same account-selection rules as
+`place_order`: omit `account` for default, or supply `{broker_id,
+account_id}` to target a specific one (1.5.12+, #234).
 
 ```json
 {
   "combo_contract": { ... },
-  "order": { ... }
+  "order": {
+    "...": "...",
+    "account": { "broker_id": "F002", "account_id": "1234567" }
+  }
 }
 ```
 

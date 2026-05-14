@@ -387,8 +387,10 @@ shioaji order <SUBCOMMAND>
 
 Place a stock or futures order. The CLI resolves the contract, then dispatches to the appropriate order type (stock or futures) based on security type.
 
+`--account` is optional. Omit it to use the default signed account of the matching type (stock account for STK contracts, futures account for FUT/OPT). Pass `BROKER_ID-ACCOUNT_ID` to target a specific account; the server fills in the remaining fields (`person_id`, `signed`, `username`) from the login session (1.5.12+, [#234](https://github.com/Yvictor/rshioaji/issues/234)).
+
 ```bash
-# Buy 1 lot of TSMC at limit price 600
+# Buy 1 lot of TSMC at limit price 600 (default stock account)
 shioaji order place --code 2330 --action Buy --price 600 --quantity 1
 
 # Market sell order for futures
@@ -397,8 +399,8 @@ shioaji order place --code TXFR1 --action Sell --quantity 1 --price-type mkt --s
 # Place without waiting for order event confirmation
 shioaji order place --code 2330 --action Buy --price 600 --quantity 1 --no-wait
 
-# Specify account explicitly
-shioaji order place --code 2330 --action Buy --price 600 --quantity 1 --account 9A00-1234567
+# Target a specific account
+shioaji order place --code 2330 --action Buy --price 600 --quantity 1 --account 9A95-1234567
 ```
 
 | Flag | Default | Description |
