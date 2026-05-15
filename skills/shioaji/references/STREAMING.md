@@ -59,12 +59,27 @@ api.subscribe(
     quote_type=sj.constant.QuoteType.Tick,
 )
 
-# Intraday odd lot 盤中零股
+# Intraday odd lot 盤中零股 - Tick
 api.subscribe(
     api.Contracts.Stocks["2330"],
     quote_type=sj.constant.QuoteType.Tick,
     intraday_odd=True,
 )
+
+# Intraday odd lot 盤中零股 - BidAsk (五檔)
+api.subscribe(
+    api.Contracts.Stocks["2330"],
+    quote_type=sj.constant.QuoteType.BidAsk,
+    intraday_odd=True,
+)
+
+# 在 callback 區分零股 vs 一般 tick: 用 `intraday_odd` 旗標
+@api.on_tick_stk_v1()
+def on_tick(exchange, tick):
+    if tick.intraday_odd:
+        print(f"[盤中零股] {tick.code} close={tick.close} vol={tick.volume}")
+    else:
+        print(f"[一般] {tick.code} close={tick.close} vol={tick.volume}")
 
 # Unsubscribe 取消訂閱
 api.unsubscribe(
@@ -243,6 +258,7 @@ tick.bid_side_total_vol  # int: Total bid volume 買方總量
 tick.ask_side_total_vol  # int: Total ask volume 賣方總量
 tick.bid_side_total_cnt  # int: Total bid count 買方筆數
 tick.ask_side_total_cnt  # int: Total ask count 賣方筆數
+tick.intraday_odd        # bool: True 表示盤中零股流 (`TIC/v1/ODD/...`), 否則 False
 ```
 
 ### BidAskSTKv1 Attributes 股票五檔屬性
@@ -256,6 +272,7 @@ bidask.ask_price       # List[Decimal]: [賣1, 賣2, 賣3, 賣4, 賣5]
 bidask.ask_volume      # List[int]: [賣量1, 賣量2, ...]
 bidask.diff_bid_vol    # List[int]: Bid volume changes 買量變化
 bidask.diff_ask_vol    # List[int]: Ask volume changes 賣量變化
+bidask.intraday_odd    # bool: True 表示盤中零股流 (`QUO/v1/ODD/...`), 否則 False
 ```
 
 ### TickFOPv1 Attributes 期貨選擇權 Tick 屬性

@@ -718,6 +718,21 @@ Subscription request:
 
 `quote_type`: `"Tick"`, `"BidAsk"`, `"Quote"`.
 
+**Intraday odd lot 盤中零股**: set `"intraday_odd": true` (works for both `"Tick"` and `"BidAsk"`; stocks only). Regular and odd-lot subscriptions are independent — you can subscribe to both for the same stock and tell them apart on the SSE side via the `intraday_odd` flag carried on each event payload:
+
+```json
+{
+  "security_type": "STK", "exchange": "TSE", "code": "2330",
+  "quote_type": "Tick", "intraday_odd": true
+}
+```
+
+```jsonc
+// example tick_stk SSE event payload
+event: tick_stk
+data: {"code":"2330","close":"2235","volume":100,"intraday_odd":true, ...}
+```
+
 #### Combined stream
 
 **GET `/api/v1/stream/data`** -- All data types merged into one SSE connection. Events are tagged:
