@@ -100,6 +100,9 @@ curl -X POST http://localhost:8080/api/v1/order/place_order \
 | `account` | Account | Trading account 交易帳戶 |
 | `custom_field` | str | Memo (max 6 chars) 備註（最多6字元）|
 
+> **TWSE accepts every `price_type` × `order_type` combination** — MKT/LMT/MKP each pair with ROD/IOC/FOK. This differs from TAIFEX; see [Futures Parameters](#futures-parameters-期貨參數).
+> **證交所所有 `price_type` × `order_type` 組合皆有效** — MKT/LMT/MKP 都可搭配 ROD/IOC/FOK；與期交所限制不同。
+
 ### Market Order 市價單
 
 ```python
@@ -108,7 +111,7 @@ order = api.Order(
     quantity=1,
     action=sj.constant.Action.Buy,
     price_type=sj.constant.StockPriceType.MKT,
-    order_type=sj.constant.OrderType.IOC,  # MKT requires IOC/FOK 市價須 IOC/FOK
+    order_type=sj.constant.OrderType.ROD,  # Stocks: MKT accepts ROD/IOC/FOK 股票市價可搭配 ROD/IOC/FOK
     account=api.stock_account,
 )
 ```
@@ -249,6 +252,9 @@ curl -X POST http://localhost:8080/api/v1/order/place_order \
 | `order_type` | OrderType | ROD/IOC/FOK 委託條件 |
 | `octype` | FuturesOCType | Auto/NewPosition/Cover 自動/新倉/平倉 |
 | `account` | Account | Futures account 期貨帳戶 |
+
+> **TAIFEX rejects `MKT` + `ROD`** — on futures/options, MKT must pair with IOC or FOK (server returns `op_code` 9938). LMT and MKP accept ROD/IOC/FOK.
+> **期交所拒絕 `MKT` + `ROD`** — 期貨/選擇權市價單必須搭配 IOC 或 FOK（伺服器回 `op_code` 9938 退單）；LMT、MKP 則三種委託條件皆可。
 
 ### Open/Close Type 開平倉類型
 

@@ -9,20 +9,38 @@ rshioaji 常見問題與解決方案（套件名稱：`rshioaji`，引入方式�
 
 ### How to place MKT/MKP orders 如何下市價單
 
-Market orders (MKT/MKP) must use IOC or FOK, not ROD.
-市價單必須使用 IOC 或 FOK，不能用 ROD。
+The MKT + ROD restriction is **TAIFEX-only** — it does not apply to TWSE stocks.
+MKT + ROD 限制**僅期交所 (TAIFEX)** 適用，證交所股票不受此限。
+
+- **Futures / options (TAIFEX)**: only `MKT` is restricted — it must pair with IOC or FOK; `MKT + ROD` is rejected with `op_code` 9938. `LMT` and `MKP` both accept ROD/IOC/FOK.
+  **期貨／選擇權**：僅 `MKT` 受限——必須搭配 IOC 或 FOK，`MKT + ROD` 會被退單（`op_code` 9938）；`LMT` 與 `MKP` 三種委託條件皆可。
+- **Stocks (TWSE)**: every `price_type` × `order_type` combination is valid — MKT/LMT/MKP each accept ROD/IOC/FOK. Symptom worth knowing: a stock MKT + IOC with no immediate counterparty returns `op_code` 48, which is normal liquidity behaviour, not an SDK issue.
+  **股票**：所有 `price_type` × `order_type` 組合皆有效；MKT/LMT/MKP 都可搭配 ROD/IOC/FOK。若股票下 MKT + IOC 沒立即成交，會回 `op_code` 48，這是市場流動性問題，並非 SDK 錯誤。
 
 ```python
 import shioaji as sj
 
+# Futures / options — MKT must use IOC or FOK
+# 期貨／選擇權 — MKT 必須使用 IOC 或 FOK
 order = api.Order(
     action=sj.constant.Action.Buy,
-    price=0,  # MKT/MKP ignores price 市價單忽略價格
+    price=0,  # MKT ignores price 市價單忽略價格
     quantity=1,
-    price_type=sj.constant.FuturesPriceType.MKT,  # or MKP
-    order_type=sj.constant.OrderType.IOC,  # Must be IOC or FOK 必須是 IOC 或 FOK
+    price_type=sj.constant.FuturesPriceType.MKT,
+    order_type=sj.constant.OrderType.IOC,  # MKT must use IOC / FOK; MKP / LMT accept ROD too 僅 MKT 須 IOC/FOK
     octype=sj.constant.FuturesOCType.Auto,
-    account=api.futopt_account
+    account=api.futopt_account,
+)
+
+# Stocks — MKT accepts ROD too
+# 股票 — MKT 可搭配 ROD
+order = api.Order(
+    action=sj.constant.Action.Buy,
+    price=0,
+    quantity=1,
+    price_type=sj.constant.StockPriceType.MKT,
+    order_type=sj.constant.OrderType.ROD,  # Or IOC / FOK 也可用 IOC / FOK
+    account=api.stock_account,
 )
 ```
 
