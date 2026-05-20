@@ -151,7 +151,7 @@ shioaji
 ├── order
 │   ├── place       --code <CODE> --action <ACTION> --quantity <QTY> [--price 0] [--price-type lmt] [--order-type rod] [--order-lot] [--order-cond] [--octype] [--account] [--security-type STK] [--no-wait]
 │   ├── cancel      --id <ID> [--no-wait]
-│   ├── list
+│   ├── list        [--account]
 │   ├── update-price --id <ID> --price <PRICE> [--no-wait]
 │   ├── update-qty  --id <ID> --quantity <QTY> [--no-wait]
 │   └── events
@@ -436,12 +436,17 @@ shioaji order cancel --id abc123 --no-wait
 
 ### order list
 
-List all trades (fetches both stock and futures trades).
+List all trades. Without `--account` fetches the default stock and futures accounts (mirrors original shioaji behaviour). Pass `--account` to fetch a specific non-default account — this also runs `update_status` on that account so subsequent `update-price` / `update-qty` / `cancel` calls can find the trade in cache.
 
 ```bash
 shioaji order list
 shioaji order list -f json
+shioaji order list --account 9A95-9816502
 ```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--account` | (default stock account + default futures account) | Account in `BROKER_ID-ACCOUNT_ID` format. Required to surface trades placed on non-default accounts. |
 
 ### order update-price
 
