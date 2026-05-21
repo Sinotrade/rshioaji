@@ -1,7 +1,7 @@
 # Install shioaji CLI binary for Windows
 # Usage: irm https://raw.githubusercontent.com/sinotrade/rshioaji/main/install.ps1 | iex
 # Pre-release: $env:CHANNEL="prerelease"; irm ... | iex
-# Specific version: $env:VERSION="v1.5.0b2"; irm ... | iex
+# Specific version: $env:VERSION="v1.7.0b1"; irm ... | iex
 $ErrorActionPreference = "Stop"
 
 $Repo = "sinotrade/rshioaji"
