@@ -1,7 +1,7 @@
 # Install shioaji CLI binary for Windows
 # Usage: irm https://raw.githubusercontent.com/sinotrade/rshioaji/main/install.ps1 | iex
 # Pre-release: $env:CHANNEL="prerelease"; irm ... | iex
-# Specific version: $env:VERSION="v1.7.0b1"; irm ... | iex
+# Specific version: $env:VERSION="v1.5.0b2"; irm ... | iex
 $ErrorActionPreference = "Stop"
 
 $Repo = "sinotrade/rshioaji"
@@ -14,12 +14,11 @@ if (-not [Environment]::Is64BitProcess) {
     exit 1
 }
 
-# Detect architecture
+# Only Windows x86_64 release assets are published.
 if ($env:PROCESSOR_ARCHITECTURE -eq "ARM64") {
-    $ArchName = "aarch64"
-} else {
-    $ArchName = "x86_64"
+    Write-Warning "shioaji does not publish a native Windows ARM64 binary yet; installing Windows x86_64 binary."
 }
+$ArchName = "x86_64"
 
 # Get latest version
 # Set CHANNEL=prerelease to install pre-release versions
