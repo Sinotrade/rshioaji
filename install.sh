@@ -2,7 +2,7 @@
 # Install shioaji CLI binary
 # Usage: curl -fsSL https://raw.githubusercontent.com/sinotrade/rshioaji/main/install.sh | sh
 # Pre-release: curl -fsSL ... | CHANNEL=prerelease sh
-# Specific version: curl -fsSL ... | VERSION=v1.7.0b1 sh
+# Specific version: curl -fsSL ... | VERSION=v1.5.0b2 sh
 set -e
 
 REPO="sinotrade/rshioaji"
