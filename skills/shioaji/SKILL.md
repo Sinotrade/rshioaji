@@ -29,6 +29,9 @@ Three access layers / 三種存取層：
 - **CLI** — `shioaji` command-line tool for server management, trading, and data queries
 - **HTTP API + SSE** — REST endpoints + real-time streaming at `localhost:8080`, accessible from JS/TS, Go, C/C++, C#, Rust, Java/Kotlin, or any HTTP client
 
+> **Reasoning about connections, timeouts, processes, or state? Read [CONCEPTS.md](references/CONCEPTS.md) first.** It is the shared mental model these three layers assume — which timeout applies on which path, why Python needs no server but CLI/HTTP share one daemon, the per-person connection cap, streaming vs request-reply. Answer those questions from CONCEPTS.md instead of guessing.
+> **推理連線、逾時、行程或狀態時,先讀 [CONCEPTS.md](references/CONCEPTS.md)。** 這是三個存取層共用的心智模型 — 哪個 timeout 在哪條路徑生效、為何 Python 不需 server 而 CLI/HTTP 共用一個 daemon、每人連線上限、串流 vs 請求-回覆。這類問題從 CONCEPTS.md 找答案,不要猜。
+
 ## How to Use References / 如何使用參考文件
 
 Answer users directly from the bundled references. Do not route users to external documentation pages as a substitute for answering. This skill uses Shioaji 1.5 as the baseline; use [MIGRATION.md](references/MIGRATION.md) only for legacy/deprecated idioms. Response handling always belongs in the matching functional reference. When an exact command flag, request field, or response schema must be confirmed, use installed CLI `--help` or the running server's `/openapi.json`.
@@ -58,6 +61,7 @@ Routing rule: choose the functional reference first, then add the access-method 
 
 | Task | Load File |
 |------|-----------|
+| Understand the architecture: process model, connections, timeout layering, streaming vs request-reply, state | [CONCEPTS.md](references/CONCEPTS.md) |
 | Migrate legacy code or fix deprecated Shioaji idioms | [MIGRATION.md](references/MIGRATION.md) |
 | Install, login, API keys, CA cert, simulation, env vars, constants | [PREPARE.md](references/PREPARE.md) |
 | Look up contract codes, attributes, security types | [CONTRACTS.md](references/CONTRACTS.md) |
