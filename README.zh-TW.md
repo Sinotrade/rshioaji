@@ -30,15 +30,24 @@ Python, JavaScript/TypeScript, Go, C/C++, C#, Rust, Java/Kotlin
 - **自訂應用** — 上傳自己的 Web 應用至伺服器，與儀表板並行服務
 - **OpenAPI 文件** — 自動產生互動式 API 文件 (`/docs`)，request/response schema 的唯一真實來源
 - **CLI 工具** — 管理伺服器、Token 池、API 連線
-- **Claude Code 技能** — AI 輔助開發，完整交易 API 文件
+- **AI Coding Agent 技能** — AI 輔助開發，完整交易 API 文件
 
-## Claude Code 技能
+## AI Coding Agent 技能
 
 安裝 shioaji 技能進行 AI 輔助交易開發：
+
+### Claude Code
 
 ```bash
 claude plugin marketplace add Sinotrade/rshioaji
 claude plugin install rshioaji
+```
+
+### Codex
+
+```bash
+codex plugin marketplace add Sinotrade/rshioaji
+codex plugin add shioaji@sinotrade
 ```
 
 技能涵蓋所有存取層 — Python、CLI、HTTP API、SSE 串流，以及 JS/TS、Go、C/C++、C#、Rust、Java/Kotlin 的完整專案指南。

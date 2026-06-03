@@ -26,9 +26,13 @@ jobs:
 
       - name: Sync files from upstream
         run: |
-          # Mirror .claude-plugin/ and skills/ (delete removed files)
+          # Mirror agent plugin marketplaces and skills (delete removed files)
+          rsync -av --delete upstream/.agents/ .agents/
           rsync -av --delete upstream/.claude-plugin/ .claude-plugin/
+          rsync -av --delete upstream/plugins/ plugins/
           rsync -av --delete upstream/skills/ skills/
+          mkdir -p plugins/shioaji/skills
+          rsync -av --delete skills/shioaji/ plugins/shioaji/skills/shioaji/
 
           # Sync CI workflows from sinotrade-workflows/ → .github/workflows/
           cp upstream/sinotrade-workflows/ci.yml .github/workflows/ci.yml

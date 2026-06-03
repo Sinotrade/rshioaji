@@ -96,7 +96,8 @@ Routing rule: choose the functional reference first, then add the access-method 
 
 ## Quick Start / 快速開始
 
-> **Install / 安裝**: `claude plugin marketplace add Sinotrade/Shioaji` → `claude plugin install shioaji`
+> **Claude install / Claude 安裝**: `claude plugin marketplace add Sinotrade/Shioaji` → `claude plugin install shioaji`
+> **Codex install / Codex 安裝**: `codex plugin marketplace add Sinotrade/Shioaji` → `codex plugin add shioaji@sinotrade`
 
 ### Python
 ```python

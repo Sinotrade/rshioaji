@@ -30,15 +30,24 @@ Python, JavaScript/TypeScript, Go, C/C++, C#, Rust, Java/Kotlin
 - **Custom Apps** — Upload and serve your own web apps alongside the dashboard
 - **OpenAPI Documentation** — Auto-generated interactive API docs at `/docs` — the single source of truth for request/response schemas
 - **CLI Tool** — Manage server, token pool, and API connectivity from the command line
-- **Claude Code Skill** — AI-assisted development with comprehensive trading API documentation
+- **AI Coding Agent Skills** — AI-assisted development with comprehensive trading API documentation
 
-## Claude Code Skill
+## AI Coding Agent Skills
 
 Install the shioaji skill for AI-assisted trading development:
+
+### Claude Code
 
 ```bash
 claude plugin marketplace add Sinotrade/rshioaji
 claude plugin install rshioaji
+```
+
+### Codex
+
+```bash
+codex plugin marketplace add Sinotrade/rshioaji
+codex plugin add shioaji@sinotrade
 ```
 
 The skill covers all access layers — Python, CLI, HTTP API, SSE streaming, and complete project guides for JS/TS, Go, C/C++, C#, Rust, and Java/Kotlin.
